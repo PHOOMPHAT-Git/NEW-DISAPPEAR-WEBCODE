@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
-const User = require('../models/user');
+const User = require('../models/User');
 
 router.get('/', (req, res) => {
     const success = req.query.registered ? 'Account created successfully. Please sign in.' : null;
