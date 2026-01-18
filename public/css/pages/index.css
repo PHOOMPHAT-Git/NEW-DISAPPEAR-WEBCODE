@@ -185,6 +185,19 @@ body {
 }
 
 @media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+
+    .logo-wrapper {
+        margin-bottom: 5rem;
+    }
+
+    .logo-text {
+        font-size: 4rem;
+        font-weight: 800;
+    }
+
     .container > .buttons:first-of-type {
         display: grid;
         grid-template-columns: 1fr;

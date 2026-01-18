@@ -253,3 +253,10 @@ body {
     opacity: 1;
     transform: translateY(0);
 }
+
+@media (max-width: 768px) {
+    .register-card {
+        width: 100%;
+        left: 0%;
+    }
+}
