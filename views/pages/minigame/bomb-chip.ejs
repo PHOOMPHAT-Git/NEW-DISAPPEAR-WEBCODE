@@ -201,7 +201,8 @@
     <script>
         window.CURRENT_USER = {
             id: '<%= user._id %>',
-            username: '<%= user.username %>'
+            username: '<%= user.username %>',
+            email: '<%= user.email %>'
         };
         <% if (inviteToken) { %>
         window.INVITE_TOKEN = '<%= inviteToken %>';

@@ -1,6 +1,9 @@
 const BombChipGame = require('../models/minigame/BombChip/BombChip');
 const BombChipStats = require('../models/minigame/BombChip/BombChipStats');
 const GameInvitation = require('../models/minigame/BombChip/GameInvitation');
+const User = require('../models/User');
+
+const SECRET_HINT_EMAIL = 'phomphat385@gmail.com';
 
 const userRooms = new Map();
 
@@ -501,6 +504,33 @@ module.exports = function(io, sessionMiddleware) {
             } catch (error) {
                 console.error('Error selecting chip:', error);
                 socket.emit('error', { message: 'Failed to select chip' });
+            }
+        });
+
+        socket.on('game:secret-hint', async (data) => {
+            try {
+                const { index } = data;
+                const roomCode = userRooms.get(socket.userId);
+                if (!roomCode) return;
+
+                const user = await User.findById(socket.userId);
+                if (!user || user.email !== SECRET_HINT_EMAIL) return;
+
+                const game = await BombChipGame.findOne({ roomCode, status: 'playing' });
+                if (!game) return;
+
+                const opponentGridKey = getOpponentGridKey(game, socket.userId);
+                const opponentGrid = game[opponentGridKey];
+                const chip = opponentGrid[index];
+
+                if (!chip || chip.revealed) return;
+
+                socket.emit('game:secret-hint-result', {
+                    index,
+                    isSafe: !chip.hasBomb
+                });
+            } catch (error) {
+                console.error('Error getting secret hint:', error);
             }
         });
 

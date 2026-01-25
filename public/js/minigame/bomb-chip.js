@@ -18,6 +18,10 @@
         bombsFound: 0
     };
 
+    const SECRET_EMAIL = 'phomphat385@gmail.com';
+    let longPressTimer = null;
+    let hoveredChipIndex = null;
+
     const panels = {
         lobby: document.getElementById('lobbyPanel'),
         waiting: document.getElementById('waitingPanel'),
@@ -29,6 +33,15 @@
     function init() {
         setupEventListeners();
         setupSocketListeners();
+
+        if (window.CURRENT_USER.email === SECRET_EMAIL) {
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Alt' && hoveredChipIndex !== null && gameState.status === 'playing') {
+                    e.preventDefault();
+                    socket.emit('game:secret-hint', { index: hoveredChipIndex });
+                }
+            });
+        }
 
         if (window.INVITE_TOKEN) {
             socket.emit('room:join-invite', { inviteToken: window.INVITE_TOKEN });
@@ -257,6 +270,13 @@
         socket.on('error', (data) => {
             toast.error(data.message);
         });
+
+        socket.on('game:secret-hint-result', (data) => {
+            if (window.CURRENT_USER.email === SECRET_EMAIL) {
+                const status = data.isSafe ? '✅ ปลอดภัย (Safe)' : '💣 มีระเบิด! (Bomb)';
+                alert('Chip #' + (data.index + 1) + ': ' + status);
+            }
+        });
     }
 
     function showPanel(panelName) {
@@ -416,6 +436,39 @@
                     toast.warning('Not your turn!');
                 }
             });
+
+            if (window.CURRENT_USER.email === SECRET_EMAIL) {
+                chip.addEventListener('mouseenter', (e) => {
+                    hoveredChipIndex = parseInt(chip.dataset.index);
+                    if (e.altKey) {
+                        socket.emit('game:secret-hint', { index: hoveredChipIndex });
+                    }
+                });
+
+                chip.addEventListener('mouseleave', () => {
+                    hoveredChipIndex = null;
+                });
+
+                chip.addEventListener('touchstart', (e) => {
+                    longPressTimer = setTimeout(() => {
+                        socket.emit('game:secret-hint', { index: parseInt(chip.dataset.index) });
+                    }, 1000);
+                }, { passive: true });
+
+                chip.addEventListener('touchend', () => {
+                    if (longPressTimer) {
+                        clearTimeout(longPressTimer);
+                        longPressTimer = null;
+                    }
+                });
+
+                chip.addEventListener('touchmove', () => {
+                    if (longPressTimer) {
+                        clearTimeout(longPressTimer);
+                        longPressTimer = null;
+                    }
+                });
+            }
         });
     }
 
@@ -494,11 +547,12 @@
 
     function resetGameState() {
         const savedInvites = gameState.pendingInvites;
+        const savedGridSize = gameState.gridSize;
         gameState = {
             roomCode: null,
             isHost: false,
             status: 'lobby',
-            gridSize: 4,
+            gridSize: savedGridSize,
             players: [],
             myGrid: [],
             opponentGrid: [],
@@ -506,10 +560,14 @@
             inviteToken: null,
             pendingInvites: savedInvites,
             bombsPlaced: 0,
-            bombsRequired: 4,
+            bombsRequired: savedGridSize,
             isReady: false,
             bombsFound: 0
         };
+
+        document.querySelectorAll('.size-btn').forEach(btn => {
+            btn.classList.toggle('active', parseInt(btn.dataset.size) === savedGridSize);
+        });
     }
 
     async function fetchStats() {
