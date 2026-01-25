@@ -47,7 +47,15 @@
                 </div>
                 <div class="info-item">
                     <span class="info-label">Member Since</span>
-                    <span class="info-value"><%= new Date(user.createdAt || Date.now()).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %></span>
+                    <span class="info-value">
+                        <%
+                            const created = user.createdAt || (user._id && user._id.getTimestamp && user._id.getTimestamp());
+                        %>
+                        <%= created
+                            ? new Date(created).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+                            : '—'
+                        %>
+                    </span>
                 </div>
             </div>
         </section>
