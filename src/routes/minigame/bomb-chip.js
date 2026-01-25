@@ -41,6 +41,7 @@ const loadUserAndStats = async (userId) => {
         User.findById(userId).populate('friends', 'username'),
         BombChipStats.findOne({ user: userId })
     ]);
+
     return {
         user,
         stats: stats || { currentStreak: 0, bestStreak: 0, wins: 0, losses: 0, totalGames: 0 }

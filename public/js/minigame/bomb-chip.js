@@ -302,7 +302,7 @@
         container.innerHTML = gameState.myGrid.map((chip, index) => {
             return '<button class="chip placement-chip ' + (chip.hasBomb ? 'chip--bomb-placed' : '') + '" ' +
                 'data-index="' + index + '">' +
-                '<span class="chip-content">' + (chip.hasBomb ? '💣' : '?') + '</span>' +
+                '<span class="chip-content">' + (chip.hasBomb ? '✗' : '?') + '</span>' +
                 '</button>';
         }).join('');
 
@@ -334,7 +334,7 @@
             const chipEl = document.querySelector('.placement-chip[data-index="' + index + '"]');
             if (chipEl) {
                 chipEl.classList.toggle('chip--bomb-placed', chip.hasBomb);
-                chipEl.querySelector('.chip-content').innerHTML = chip.hasBomb ? '💣' : '?';
+                chipEl.querySelector('.chip-content').innerHTML = chip.hasBomb ? '✗' : '?';
             }
         });
     }
@@ -382,7 +382,7 @@
 
             return '<div class="' + classes + '" data-index="' + index + '">' +
                 '<span class="chip-content">' +
-                (chip.hasBomb ? '💣' : (chip.revealed ? '✓' : '')) +
+                (chip.hasBomb ? '✗' : (chip.revealed ? '✓' : '')) +
                 '</span>' +
                 '</div>';
         }).join('');
@@ -403,7 +403,7 @@
             return '<button class="' + classes + '" data-index="' + index + '" ' +
                 (chip.revealed ? 'disabled' : '') + '>' +
                 '<span class="chip-content">' +
-                (chip.revealed ? (chip.hasBomb ? '💣' : '✓') : '?') +
+                (chip.revealed ? (chip.hasBomb ? '✗' : '✓') : '?') +
                 '</span>' +
                 '</button>';
         }).join('');
@@ -456,7 +456,7 @@
         chipEl.disabled = true;
 
         const content = chipEl.querySelector('.chip-content');
-        content.innerHTML = data.hasBomb ? '💣' : '✓';
+        content.innerHTML = data.hasBomb ? '✗' : '✓';
     }
 
     function revealChipOnMyBoard(data) {

@@ -264,6 +264,7 @@ body {
 
 .player-item--me { border-color: var(--gold-dark); }
 .player-name { font-weight: 500; }
+
 .host-badge {
     font-size: 0.75rem;
     padding: 0.25rem 0.5rem;
@@ -347,16 +348,8 @@ body {
     gap: 0.15rem;
 }
 
-.invited-room-from {
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: var(--text-primary);
-}
-
-.invited-room-code {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-}
+.invited-room-from { font-size: 0.9rem; font-weight: 500; color: var(--text-primary); }
+.invited-room-code { font-size: 0.75rem; color: var(--text-muted); }
 
 .btn-join-invite {
     padding: 0.5rem 1rem;
@@ -386,15 +379,8 @@ body {
     margin-bottom: 1rem;
 }
 
-.placing-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-}
-
-.placing-status {
-    font-size: 0.95rem;
-    color: var(--gold-primary);
-}
+.placing-title { font-size: 1.1rem; font-weight: 600; }
+.placing-status { font-size: 0.95rem; color: var(--gold-primary); }
 
 .placing-instructions {
     text-align: center;
@@ -442,9 +428,7 @@ body {
     margin-bottom: 1.5rem;
 }
 
-.placing-actions {
-    text-align: center;
-}
+.placing-actions { text-align: center; }
 
 .ready-status {
     margin-top: 0.75rem;
@@ -523,8 +507,8 @@ body {
     text-align: center;
 }
 
-.my-board-section .board-label { color: var(--success); }
-.opponent-board-section .board-label { color: var(--text-warning); }
+.my-board-section .board-label { color: var(--text-warning); }
+.opponent-board-section .board-label { color: var(--success); }
 
 .game-grid-container {
     display: flex;
@@ -565,13 +549,11 @@ body {
 
 .chip:active:not([disabled]):not(.my-chip) { transform: scale(0.95); }
 
-.my-chip {
-    cursor: default;
-}
+.my-chip { cursor: default; }
 
 .my-chip.chip--has-bomb {
-    background: linear-gradient(135deg, var(--bg-success), #1a4d2e);
-    border-color: var(--success);
+    background: linear-gradient(135deg, var(--bg-warning), #3d1f1f) !important;
+    border-color: var(--text-warning) !important;
     opacity: 1;
 }
 
@@ -584,8 +566,8 @@ body {
 }
 
 .my-chip.chip--bomb-hit {
-    background: linear-gradient(135deg, color-mix(in srgb, var(--bg-success) 70%, #000 30%), #1a4d2e);
-    border-color: var(--success);
+    background: linear-gradient(135deg, var(--bg-warning), #3d1f1f);
+    border-color: var(--text-warning);
     opacity: 1;
     animation: pulse 0.5s ease-in-out;
 }
@@ -625,9 +607,7 @@ body {
     border: 1px solid var(--divider);
 }
 
-.bomb-tracker strong {
-    color: var(--gold-primary);
-}
+.bomb-tracker strong { color: var(--gold-primary); }
 
 .tracker-warning {
     display: block;
@@ -647,9 +627,7 @@ body {
 }
 
 .winner-display,
-.loser-display {
-    text-align: center;
-}
+.loser-display { text-align: center; }
 
 .result-label {
     display: block;
@@ -683,19 +661,9 @@ body {
 }
 
 @media (max-width: 700px) {
-    .battle-boards {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-    }
-
-    .game-grid {
-        max-width: 250px;
-    }
-
-    .result-display {
-        flex-direction: column;
-        gap: 1.5rem;
-    }
+    .battle-boards { grid-template-columns: 1fr; gap: 1.5rem; }
+    .game-grid { max-width: 250px; }
+    .result-display { flex-direction: column; gap: 1.5rem; }
 }
 
 @media (max-width: 520px) {
@@ -721,9 +689,7 @@ body {
 .chip--bomb-placed::before,
 .my-chip.chip--has-bomb::before,
 .my-chip.chip--bomb-hit::before {
-    content: '';
     width: 26px;
     height: 26px;
     display: block;
-    background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%3E%0A%3Cpath%20fill%3D%22%23FFFFFF%22%20d%3D%22M10.1%203.4c.8-.8%202-.8%202.8%200l.7.7c.3.3.7.4%201.1.2l1-.5c.7-.3%201.6-.2%202.1.4.6.6.7%201.4.4%202.1l-.5%201c-.2.4-.1.8.2%201.1l.7.7c.8.8.8%202%200%202.8l-.7.7c-.3.3-.4.7-.2%201.1l.5%201c.3.7.2%201.6-.4%202.1-.6.6-1.4.7-2.1.4l-1-.5c-.4-.2-.8-.1-1.1.2l-.7.7c-.8.8-2%20.8-2.8%200l-.7-.7c-.3-.3-.7-.4-1.1-.2l-1%20.5c-.7.3-1.6.2-2.1-.4-.6-.6-.7-1.4-.4-2.1l.5-1c.2-.4.1-.8-.2-1.1l-.7-.7c-.8-.8-.8-2%200-2.8l.7-.7c.3-.3.4-.7.2-1.1l-.5-1c-.3-.7-.2-1.6.4-2.1.6-.6%201.4-.7%202.1-.4l1%20.5c.4.2.8.1%201.1-.2l.7-.7z%22/%3E%0A%3Cpath%20fill%3D%22%23FFFFFF%22%20d%3D%22M18.3%202.3a1%201%200%200%201%201.4%200l.6.6.6-.6a1%201%200%200%201%201.4%201.4l-.6.6.6.6a1%201%200%201%201-1.4%201.4l-.6-.6-.6.6a1%201%200%201%201-1.4-1.4l.6-.6-.6-.6a1%201%200%200%201%200-1.4z%22/%3E%0A%3C/svg%3E") center/contain no-repeat;
 }
