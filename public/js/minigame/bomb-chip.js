@@ -247,7 +247,7 @@
                 });
             }
             renderPendingInvites();
-            toast.info(data.from.username + ' invited you to play BombChip!');
+            toast.info(data.from.username + ' invited you to play Bomb Chip!');
         });
 
         socket.on('invite:sent', () => {
@@ -346,7 +346,7 @@
         if (gameState.bombsPlaced === gameState.bombsRequired && !gameState.isReady) {
             readyBtn.classList.remove('hidden');
             readyBtn.disabled = false;
-            readyBtn.textContent = 'Ready!';
+            readyBtn.textContent = 'Ready';
         } else if (gameState.isReady) {
             readyBtn.classList.remove('hidden');
             readyBtn.disabled = true;
@@ -484,12 +484,6 @@
             }
         } else {
             document.getElementById('winnerName').textContent = '-';
-        }
-
-        if (loser) {
-            document.getElementById('loserName').textContent = loser.username;
-        } else {
-            document.getElementById('loserName').textContent = '-';
         }
 
         document.getElementById('gameOverReason').textContent = reason || '';
