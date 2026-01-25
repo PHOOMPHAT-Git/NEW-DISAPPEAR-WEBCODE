@@ -678,13 +678,6 @@ body {
     .placing-header { flex-direction: column; gap: 0.5rem; text-align: center; }
 }
 
-.chip--bomb,
-.chip--bomb-placed,
-.my-chip.chip--has-bomb,
-.my-chip.chip--bomb-hit {
-    font-size: 0;
-}
-
 .chip--bomb::before,
 .chip--bomb-placed::before,
 .my-chip.chip--has-bomb::before,
