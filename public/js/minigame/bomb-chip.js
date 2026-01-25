@@ -6,17 +6,22 @@
         isHost: false,
         status: 'lobby',
         gridSize: 4,
-        bombCount: 4,
         players: [],
-        grid: [],
+        myGrid: [],
+        opponentGrid: [],
         myTurn: false,
         inviteToken: null,
-        pendingInvites: []
+        pendingInvites: [],
+        bombsPlaced: 0,
+        bombsRequired: 4,
+        isReady: false,
+        bombsFound: 0
     };
 
     const panels = {
         lobby: document.getElementById('lobbyPanel'),
         waiting: document.getElementById('waitingPanel'),
+        placing: document.getElementById('placingPanel'),
         game: document.getElementById('gamePanel'),
         gameOver: document.getElementById('gameOverPanel')
     };
@@ -45,20 +50,12 @@
                 document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 gameState.gridSize = parseInt(btn.dataset.size);
-                updateBombSlider();
             });
-        });
-
-        const bombSlider = document.getElementById('bombCount');
-        bombSlider.addEventListener('input', () => {
-            gameState.bombCount = parseInt(bombSlider.value);
-            document.getElementById('bombCountDisplay').textContent = bombSlider.value;
         });
 
         document.getElementById('createRoomBtn').addEventListener('click', () => {
             socket.emit('room:create', {
-                gridSize: gameState.gridSize,
-                bombCount: gameState.bombCount
+                gridSize: gameState.gridSize
             });
         });
 
@@ -83,13 +80,17 @@
         });
 
         document.getElementById('startGameBtn').addEventListener('click', () => {
-            socket.emit('game:start');
+            socket.emit('game:start-placing');
         });
 
         document.getElementById('leaveRoomBtn').addEventListener('click', () => {
             socket.emit('room:leave');
             showPanel('lobby');
             resetGameState();
+        });
+
+        document.getElementById('readyBtn').addEventListener('click', () => {
+            socket.emit('game:ready');
         });
 
         document.getElementById('playAgainBtn').addEventListener('click', () => {
@@ -114,7 +115,7 @@
             gameState.isHost = data.isHost;
             gameState.players = data.players;
             gameState.gridSize = data.gameConfig.gridSize;
-            gameState.bombCount = data.gameConfig.bombCount;
+            gameState.bombsRequired = data.gameConfig.bombCount;
             gameState.status = 'waiting';
 
             gameState.pendingInvites = gameState.pendingInvites.filter(
@@ -149,28 +150,80 @@
             updateWaitingRoom();
         });
 
+        socket.on('game:placing-started', (data) => {
+            gameState.status = 'placing';
+            gameState.gridSize = data.gridSize;
+            gameState.bombsRequired = data.bombCount;
+            gameState.bombsPlaced = 0;
+            gameState.isReady = false;
+            gameState.players = data.players;
+
+            const totalChips = data.gridSize * data.gridSize;
+            gameState.myGrid = [];
+            for (let i = 0; i < totalChips; i++) {
+                gameState.myGrid.push({ index: i, hasBomb: false });
+            }
+
+            renderPlacementPhase();
+            showPanel('placing');
+            toast.info('Place your bombs!');
+        });
+
+        socket.on('game:bomb-placed', (data) => {
+            gameState.myGrid[data.index].hasBomb = data.hasBomb;
+            gameState.bombsPlaced = data.bombsPlaced;
+            updatePlacementGrid();
+            updatePlacementStatus();
+        });
+
+        socket.on('game:player-ready', (data) => {
+            if (data.odejde === window.CURRENT_USER.id) {
+                gameState.isReady = true;
+                document.getElementById('readyBtn').textContent = 'Waiting...';
+                document.getElementById('readyBtn').disabled = true;
+            }
+            updateReadyStatus(data.odejde, data.username);
+            toast.info(data.username + ' is ready!');
+        });
+
         socket.on('game:started', (data) => {
-            gameState.grid = data.grid;
+            gameState.myGrid = data.myGrid;
+            gameState.opponentGrid = data.opponentGrid;
+            gameState.gridSize = data.gridSize;
+            gameState.bombsRequired = data.bombCount;
             gameState.players = data.players;
             gameState.status = 'playing';
+            gameState.bombsFound = 0;
 
-            renderGameGrid();
-            renderGamePlayers();
+            document.getElementById('bombsTotalCount').textContent = data.bombCount;
+            document.getElementById('bombsFoundCount').textContent = '0';
+
+            renderBattlePhase();
             updateTurnIndicator(data.currentPlayer);
             showPanel('game');
+            toast.success('Game started!');
         });
 
         socket.on('game:chip-revealed', (data) => {
-            revealChip(data);
+            const targetIsMyBoard = data.targetBoard === window.CURRENT_USER.id;
 
-            if (data.eliminated) {
-                toast.warning(data.eliminated.username + ' hit a bomb!');
-                updatePlayerStatus(data.eliminated.id, false);
+            if (targetIsMyBoard) {
+                revealChipOnMyBoard(data);
+            } else {
+                revealChipOnOpponentBoard(data);
+                if (data.hasBomb && data.revealedBy.id === window.CURRENT_USER.id) {
+                    gameState.bombsFound = data.bombsHit || (gameState.bombsFound + 1);
+                    document.getElementById('bombsFoundCount').textContent = gameState.bombsFound;
+                }
+            }
+
+            if (data.hasBomb) {
+                toast.warning(data.revealedBy.username + ' hit a bomb!');
             }
 
             if (data.gameOver) {
                 setTimeout(() => {
-                    showGameOver(data.winner);
+                    showGameOver(data.winner, data.loser, data.reason);
                 }, 1500);
             } else if (data.nextPlayer) {
                 updateTurnIndicator(data.nextPlayer);
@@ -178,15 +231,7 @@
         });
 
         socket.on('game:finished', (data) => {
-            showGameOver(data.winner);
-        });
-
-        socket.on('game:player-left', (data) => {
-            updatePlayerStatus(data.userId, false);
-            if (data.nextPlayer) {
-                updateTurnIndicator(data.nextPlayer);
-            }
-            toast.info(data.username + ' left the game');
+            showGameOver(data.winner, data.loser, data.reason);
         });
 
         socket.on('invite:received', (data) => {
@@ -216,20 +261,10 @@
 
     function showPanel(panelName) {
         Object.keys(panels).forEach(key => {
-            panels[key].classList.toggle('hidden', key !== panelName);
+            if (panels[key]) {
+                panels[key].classList.toggle('hidden', key !== panelName);
+            }
         });
-    }
-
-    function updateBombSlider() {
-        const totalChips = gameState.gridSize * gameState.gridSize;
-        const maxBombs = Math.floor(totalChips * 0.5);
-        const defaultBombs = Math.floor(totalChips * 0.25);
-
-        const slider = document.getElementById('bombCount');
-        slider.max = maxBombs;
-        slider.value = defaultBombs;
-        gameState.bombCount = defaultBombs;
-        document.getElementById('bombCountDisplay').textContent = defaultBombs;
     }
 
     function updateWaitingRoom() {
@@ -238,8 +273,11 @@
 
         const playersList = document.getElementById('playersList');
         playersList.innerHTML = gameState.players.map(p => {
-            const isMe = p.user === window.CURRENT_USER.id || p.user.toString() === window.CURRENT_USER.id;
-            const isHost = gameState.players[0] && (p.user === gameState.players[0].user || p.user.toString() === gameState.players[0].user.toString());
+            const odejde = p.user._id || p.user;
+            const isMe = odejde === window.CURRENT_USER.id || odejde.toString() === window.CURRENT_USER.id;
+            const firstPlayer = gameState.players[0];
+            const firstPlayerId = firstPlayer.user._id || firstPlayer.user;
+            const isHost = odejde === firstPlayerId || odejde.toString() === firstPlayerId.toString();
             return '<div class="player-item ' + (isMe ? 'player-item--me' : '') + '">' +
                 '<span class="player-name">' + escapeHtml(p.username) + '</span>' +
                 (isHost ? '<span class="host-badge">Host</span>' : '') +
@@ -254,19 +292,123 @@
         }
     }
 
-    function renderGameGrid() {
-        const grid = document.getElementById('gameGrid');
-        grid.className = 'game-grid grid-' + gameState.gridSize + 'x' + gameState.gridSize;
+    function renderPlacementPhase() {
+        document.getElementById('bombsRequiredCount').textContent = gameState.bombsRequired;
+        document.getElementById('bombsPlacedCount').textContent = gameState.bombsPlaced;
 
-        grid.innerHTML = gameState.grid.map((chip, index) => {
-            return '<button class="chip ' + (chip.revealed ? 'chip--revealed' : '') + '" ' +
-                'data-index="' + index + '" ' +
-                (chip.revealed ? 'disabled' : '') + '>' +
-                '<span class="chip-content">?</span>' +
+        const container = document.getElementById('placementGrid');
+        container.className = 'game-grid grid-' + gameState.gridSize + 'x' + gameState.gridSize;
+
+        container.innerHTML = gameState.myGrid.map((chip, index) => {
+            return '<button class="chip placement-chip ' + (chip.hasBomb ? 'chip--bomb-placed' : '') + '" ' +
+                'data-index="' + index + '">' +
+                '<span class="chip-content">' + (chip.hasBomb ? '💣' : '?') + '</span>' +
                 '</button>';
         }).join('');
 
-        grid.querySelectorAll('.chip:not([disabled])').forEach(chip => {
+        container.querySelectorAll('.placement-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                if (!gameState.isReady) {
+                    socket.emit('game:place-bomb', { index: parseInt(chip.dataset.index) });
+                }
+            });
+        });
+
+        renderPlacingPlayers();
+        updatePlacementStatus();
+    }
+
+    function renderPlacingPlayers() {
+        const container = document.getElementById('placingPlayers');
+        container.innerHTML = gameState.players.map(p => {
+            const odejde = p.user._id || p.user;
+            const isReady = p.bombsPlaced;
+            return '<div class="placing-player ' + (isReady ? 'ready' : '') + '" data-user-id="' + odejde + '">' +
+                escapeHtml(p.username) + (isReady ? ' ✓' : '') +
+                '</div>';
+        }).join('');
+    }
+
+    function updatePlacementGrid() {
+        gameState.myGrid.forEach((chip, index) => {
+            const chipEl = document.querySelector('.placement-chip[data-index="' + index + '"]');
+            if (chipEl) {
+                chipEl.classList.toggle('chip--bomb-placed', chip.hasBomb);
+                chipEl.querySelector('.chip-content').innerHTML = chip.hasBomb ? '💣' : '?';
+            }
+        });
+    }
+
+    function updatePlacementStatus() {
+        document.getElementById('bombsPlacedCount').textContent = gameState.bombsPlaced;
+
+        const readyBtn = document.getElementById('readyBtn');
+        if (gameState.bombsPlaced === gameState.bombsRequired && !gameState.isReady) {
+            readyBtn.classList.remove('hidden');
+            readyBtn.disabled = false;
+            readyBtn.textContent = 'Ready!';
+        } else if (gameState.isReady) {
+            readyBtn.classList.remove('hidden');
+            readyBtn.disabled = true;
+            readyBtn.textContent = 'Waiting...';
+        } else {
+            readyBtn.classList.add('hidden');
+        }
+    }
+
+    function updateReadyStatus(odejde, username) {
+        const playerEl = document.querySelector('.placing-player[data-user-id="' + odejde + '"]');
+        if (playerEl) {
+            playerEl.classList.add('ready');
+            playerEl.innerHTML = escapeHtml(username) + ' ✓';
+        }
+    }
+
+    function renderBattlePhase() {
+        renderMyBoard();
+        renderOpponentBoard();
+        renderBattlePlayers();
+    }
+
+    function renderMyBoard() {
+        const grid = document.getElementById('myGrid');
+        grid.className = 'game-grid grid-' + gameState.gridSize + 'x' + gameState.gridSize;
+
+        grid.innerHTML = gameState.myGrid.map((chip, index) => {
+            let classes = 'chip my-chip';
+            if (chip.revealed) classes += ' chip--revealed';
+            if (chip.hasBomb) classes += ' chip--has-bomb';
+            if (chip.revealed && chip.hasBomb) classes += ' chip--bomb-hit';
+
+            return '<div class="' + classes + '" data-index="' + index + '">' +
+                '<span class="chip-content">' +
+                (chip.hasBomb ? '💣' : (chip.revealed ? '✓' : '')) +
+                '</span>' +
+                '</div>';
+        }).join('');
+    }
+
+    function renderOpponentBoard() {
+        const grid = document.getElementById('opponentGrid');
+        grid.className = 'game-grid grid-' + gameState.gridSize + 'x' + gameState.gridSize;
+
+        grid.innerHTML = gameState.opponentGrid.map((chip, index) => {
+            let classes = 'chip opponent-chip';
+            if (chip.revealed) {
+                classes += ' chip--revealed';
+                if (chip.hasBomb) classes += ' chip--bomb';
+                else classes += ' chip--safe';
+            }
+
+            return '<button class="' + classes + '" data-index="' + index + '" ' +
+                (chip.revealed ? 'disabled' : '') + '>' +
+                '<span class="chip-content">' +
+                (chip.revealed ? (chip.hasBomb ? '💣' : '✓') : '?') +
+                '</span>' +
+                '</button>';
+        }).join('');
+
+        grid.querySelectorAll('.opponent-chip:not([disabled])').forEach(chip => {
             chip.addEventListener('click', () => {
                 if (gameState.myTurn) {
                     socket.emit('game:select-chip', { index: parseInt(chip.dataset.index) });
@@ -277,23 +419,25 @@
         });
     }
 
-    function renderGamePlayers() {
+    function renderBattlePlayers() {
         const container = document.getElementById('gamePlayers');
         container.innerHTML = gameState.players.map(p => {
-            return '<div class="game-player ' + (p.isAlive ? '' : 'game-player--eliminated') + '" data-user-id="' + p.user + '">' +
+            const odejde = p.user._id || p.user;
+            return '<div class="game-player" data-user-id="' + odejde + '">' +
                 '<span class="game-player-name">' + escapeHtml(p.username) + '</span>' +
-                '<span class="game-player-status">' + (p.isAlive ? 'Alive' : 'Eliminated') + '</span>' +
+                '<span class="game-player-status">Bombs hit: ' + (p.bombsHitOnMyBoard || 0) + '</span>' +
                 '</div>';
         }).join('');
     }
 
     function updateTurnIndicator(player) {
         document.getElementById('currentTurnPlayer').textContent = player.username;
-        gameState.myTurn = player.id === window.CURRENT_USER.id || player.id.toString() === window.CURRENT_USER.id;
+        const playerId = player.id._id || player.id;
+        gameState.myTurn = playerId === window.CURRENT_USER.id || playerId.toString() === window.CURRENT_USER.id;
 
         document.querySelectorAll('.game-player').forEach(el => {
             const userId = el.dataset.userId;
-            el.classList.toggle('game-player--active', userId === player.id || userId === player.id.toString());
+            el.classList.toggle('game-player--active', userId === playerId || userId === playerId.toString());
         });
 
         if (gameState.myTurn) {
@@ -301,47 +445,56 @@
         }
     }
 
-    function revealChip(data) {
-        const chipEl = document.querySelector('.chip[data-index="' + data.index + '"]');
+    function revealChipOnOpponentBoard(data) {
+        const chipEl = document.querySelector('#opponentGrid .chip[data-index="' + data.index + '"]');
         if (!chipEl) return;
+
+        gameState.opponentGrid[data.index].revealed = true;
+        gameState.opponentGrid[data.index].hasBomb = data.hasBomb;
 
         chipEl.classList.add('chip--revealed');
         chipEl.classList.add(data.hasBomb ? 'chip--bomb' : 'chip--safe');
         chipEl.disabled = true;
 
         const content = chipEl.querySelector('.chip-content');
+        content.innerHTML = data.hasBomb ? '💣' : '✓';
+    }
+
+    function revealChipOnMyBoard(data) {
+        const chipEl = document.querySelector('#myGrid .chip[data-index="' + data.index + '"]');
+        if (!chipEl) return;
+
+        gameState.myGrid[data.index].revealed = true;
+
+        chipEl.classList.add('chip--revealed');
         if (data.hasBomb) {
-            content.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>';
-        } else {
-            content.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>';
+            chipEl.classList.add('chip--bomb-hit');
         }
     }
 
-    function updatePlayerStatus(userId, isAlive) {
-        const playerEl = document.querySelector('.game-player[data-user-id="' + userId + '"]');
-        if (playerEl) {
-            playerEl.classList.toggle('game-player--eliminated', !isAlive);
-            playerEl.querySelector('.game-player-status').textContent = isAlive ? 'Alive' : 'Eliminated';
-        }
-
-        const player = gameState.players.find(p => p.user === userId || p.user.toString() === userId);
-        if (player) {
-            player.isAlive = isAlive;
-        }
-    }
-
-    function showGameOver(winner) {
+    function showGameOver(winner, loser, reason) {
         gameState.status = 'finished';
+
         if (winner) {
             document.getElementById('winnerName').textContent = winner.username;
-            if (winner.id === window.CURRENT_USER.id || winner.id.toString() === window.CURRENT_USER.id) {
+            const winnerId = winner.id._id || winner.id;
+            if (winnerId === window.CURRENT_USER.id || winnerId.toString() === window.CURRENT_USER.id) {
                 toast.success('You won!');
             } else {
                 toast.info(winner.username + ' wins!');
             }
         } else {
-            document.getElementById('winnerName').textContent = 'No one';
+            document.getElementById('winnerName').textContent = '-';
         }
+
+        if (loser) {
+            document.getElementById('loserName').textContent = loser.username;
+        } else {
+            document.getElementById('loserName').textContent = '-';
+        }
+
+        document.getElementById('gameOverReason').textContent = reason || '';
+
         showPanel('gameOver');
         fetchStats();
     }
@@ -353,12 +506,16 @@
             isHost: false,
             status: 'lobby',
             gridSize: 4,
-            bombCount: 4,
             players: [],
-            grid: [],
+            myGrid: [],
+            opponentGrid: [],
             myTurn: false,
             inviteToken: null,
-            pendingInvites: savedInvites
+            pendingInvites: savedInvites,
+            bombsPlaced: 0,
+            bombsRequired: 4,
+            isReady: false,
+            bombsFound: 0
         };
     }
 

@@ -26,7 +26,7 @@ body {
 }
 
 .container {
-    max-width: 800px;
+    max-width: 900px;
     margin: 0 auto;
     padding: 3rem 2rem;
     animation: fadeIn 0.5s ease-out;
@@ -121,6 +121,7 @@ body {
 
 .form-group { margin-bottom: 1.25rem; }
 .form-label { display: block; font-size: 0.9rem; font-weight: 500; margin-bottom: 0.5rem; }
+.form-hint { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem; }
 
 .button-group { display: flex; gap: 0.5rem; }
 
@@ -142,24 +143,6 @@ body {
     background: color-mix(in srgb, var(--gold-secondary) 15%, transparent);
     border-color: var(--gold-dark);
     color: var(--gold-primary);
-}
-
-.slider {
-    width: 100%;
-    height: 6px;
-    -webkit-appearance: none;
-    background: var(--divider);
-    border-radius: 3px;
-    outline: none;
-}
-
-.slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 18px;
-    height: 18px;
-    background: var(--gold-primary);
-    border-radius: 50%;
-    cursor: pointer;
 }
 
 .text-input {
@@ -197,6 +180,7 @@ body {
 
 .btn-primary:hover { background: var(--gold-dark); }
 .btn-primary.hidden { display: none; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .btn-secondary {
     display: inline-flex;
@@ -395,6 +379,86 @@ body {
     gap: 0.75rem;
 }
 
+/* Placement Phase */
+.placing-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.placing-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.placing-status {
+    font-size: 0.95rem;
+    color: var(--gold-primary);
+}
+
+.placing-instructions {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: var(--bg-card);
+    border-radius: 8px;
+}
+
+.placing-instructions p {
+    margin-bottom: 0.25rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.placing-instructions .warning-text {
+    color: var(--text-warning);
+    font-weight: 500;
+}
+
+.placing-players {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.placing-player {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    background: var(--bg-card);
+    border: 2px solid var(--divider);
+    border-radius: 6px;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.placing-player.ready {
+    border-color: var(--success);
+    color: var(--success);
+}
+
+.placing-grid-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.placing-actions {
+    text-align: center;
+}
+
+.ready-status {
+    margin-top: 0.75rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.chip--bomb-placed {
+    background: linear-gradient(135deg, var(--bg-warning), #3d1f1f) !important;
+    border-color: var(--text-warning) !important;
+}
+
+/* Game Phase */
 .game-header {
     text-align: center;
     padding-bottom: 1rem;
@@ -431,22 +495,54 @@ body {
 }
 
 .game-player--active { border-color: var(--gold-primary); }
-.game-player--eliminated { opacity: 0.5; }
 .game-player-name { font-weight: 500; font-size: 0.9rem; }
 .game-player-status { font-size: 0.75rem; color: var(--text-muted); display: block; }
+
+/* Battle Boards - Two Board Layout */
+.battle-boards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.board-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.board-label {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    text-align: center;
+}
+
+.board-hint {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+    text-align: center;
+}
+
+.my-board-section .board-label { color: var(--success); }
+.opponent-board-section .board-label { color: var(--text-warning); }
 
 .game-grid-container {
     display: flex;
     justify-content: center;
+    width: 100%;
 }
 
 .game-grid {
     display: grid;
-    gap: 8px;
-    max-width: 400px;
+    gap: 6px;
+    max-width: 280px;
     width: 100%;
 }
 
+.grid-3x3 { grid-template-columns: repeat(3, 1fr); }
 .grid-4x4 { grid-template-columns: repeat(4, 1fr); }
 .grid-5x5 { grid-template-columns: repeat(5, 1fr); }
 .grid-6x6 { grid-template-columns: repeat(6, 1fr); }
@@ -461,18 +557,39 @@ body {
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s;
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     color: var(--text-muted);
 }
 
-.chip:hover:not([disabled]) {
+.chip:hover:not([disabled]):not(.my-chip) {
     border-color: var(--gold-secondary);
     transform: scale(1.05);
 }
 
-.chip:active:not([disabled]) { transform: scale(0.95); }
+.chip:active:not([disabled]):not(.my-chip) { transform: scale(0.95); }
 
-.chip--revealed {
+/* My board chips - not clickable */
+.my-chip {
+    cursor: default;
+}
+
+.my-chip.chip--has-bomb {
+    background: linear-gradient(135deg, #2a1a1a, #3d2020);
+    border-color: #5a3030;
+}
+
+.my-chip.chip--revealed {
+    opacity: 0.7;
+}
+
+.my-chip.chip--bomb-hit {
+    background: linear-gradient(135deg, var(--bg-warning), #5d2f2f);
+    border-color: var(--text-warning);
+    animation: pulse 0.5s ease-in-out;
+}
+
+/* Opponent board chips */
+.opponent-chip.chip--revealed {
     cursor: default;
     transform: none !important;
 }
@@ -482,15 +599,11 @@ body {
     border-color: var(--success);
 }
 
-.chip--safe .chip-content svg { stroke: var(--success); width: 60%; height: 60%; }
-
 .chip--bomb {
     background: linear-gradient(135deg, var(--bg-warning), #3d1f1f);
     border-color: var(--text-warning);
     animation: shake 0.5s ease-in-out;
 }
-
-.chip--bomb .chip-content svg { fill: var(--text-warning); width: 60%; height: 60%; }
 
 @keyframes shake {
     0%, 100% { transform: translateX(0); }
@@ -498,17 +611,93 @@ body {
     75% { transform: translateX(5px); }
 }
 
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+/* Bomb Tracker */
+.bomb-tracker {
+    text-align: center;
+    padding: 1rem;
+    background: var(--bg-card);
+    border-radius: 8px;
+    border: 1px solid var(--divider);
+}
+
+.bomb-tracker strong {
+    color: var(--gold-primary);
+}
+
+.tracker-warning {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--text-warning);
+}
+
+/* Game Over */
 .game-over-content { text-align: center; padding: 2rem 0; }
 .game-over-title { font-size: 1.5rem; margin-bottom: 1.5rem; }
 
-.winner-display { margin-bottom: 2rem; }
-.winner-label { display: block; font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.5rem; }
-.winner-name { font-size: 2rem; font-weight: 700; color: var(--gold-primary); }
+.result-display {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    margin-bottom: 1rem;
+}
+
+.winner-display,
+.loser-display {
+    text-align: center;
+}
+
+.result-label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.winner-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--gold-primary);
+}
+
+.loser-name {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-warning);
+}
+
+.game-over-reason {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+}
 
 .game-over-actions {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+}
+
+/* Responsive */
+@media (max-width: 700px) {
+    .battle-boards {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .game-grid {
+        max-width: 250px;
+    }
+
+    .result-display {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
 }
 
 @media (max-width: 520px) {
@@ -517,7 +706,8 @@ body {
     .stat-item { min-width: calc(33% - 0.75rem); }
     .lobby-tabs { flex-direction: column; }
     .button-group { flex-wrap: wrap; }
-    .size-btn { flex: 1 1 calc(33% - 0.5rem); }
+    .size-btn { flex: 1 1 calc(50% - 0.25rem); }
     .room-code { font-size: 1.5rem; }
     .game-player { min-width: calc(50% - 0.25rem); }
+    .placing-header { flex-direction: column; gap: 0.5rem; text-align: center; }
 }

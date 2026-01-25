@@ -23,7 +23,7 @@
 
         <section class="section">
             <h2 class="section-title">Bomb Chip</h2>
-            <p class="section-subtitle">Reveal chips, avoid bombs, be the last one standing!</p>
+            <p class="section-subtitle">Place bombs on your board, attack opponent's board. Find all their bombs = YOU LOSE!</p>
 
             <div class="stats-bar">
                 <div class="stat-item">
@@ -50,15 +50,13 @@
                     <div class="form-group">
                         <label class="form-label">Grid Size</label>
                         <div class="button-group">
+                            <button class="size-btn" data-size="3">3x3</button>
                             <button class="size-btn active" data-size="4">4x4</button>
                             <button class="size-btn" data-size="5">5x5</button>
                             <button class="size-btn" data-size="6">6x6</button>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Bomb Count: <span id="bombCountDisplay">4</span></label>
-                        <input type="range" id="bombCount" min="2" max="8" value="4" class="slider">
-                    </div>
+                    <p class="form-hint">Bomb count = Grid size (3x3 = 3 bombs, 4x4 = 4 bombs, etc.)</p>
                     <button id="createRoomBtn" class="btn-primary">Create Room</button>
                 </div>
 
@@ -123,28 +121,79 @@
                 </div>
             </div>
 
+            <div id="placingPanel" class="panel hidden">
+                <div class="placing-header">
+                    <h3 class="placing-title">Place Your Bombs</h3>
+                    <div class="placing-status">
+                        <span>Bombs: <strong id="bombsPlacedCount">0</strong> / <strong id="bombsRequiredCount">4</strong></span>
+                    </div>
+                </div>
+
+                <div class="placing-instructions">
+                    <p>Click cells to place bombs on your board.</p>
+                    <p class="warning-text">If opponent finds ALL your bombs, they LOSE!</p>
+                </div>
+
+                <div class="placing-players" id="placingPlayers"></div>
+
+                <div class="placing-grid-container">
+                    <div id="placementGrid" class="game-grid grid-4x4"></div>
+                </div>
+
+                <div class="placing-actions">
+                    <button id="readyBtn" class="btn-primary hidden">Ready!</button>
+                    <p id="readyStatus" class="ready-status"></p>
+                </div>
+            </div>
+
             <div id="gamePanel" class="panel hidden">
                 <div class="game-header">
                     <div class="turn-indicator">
-                        <span class="turn-label">Current Turn :</span>
+                        <span class="turn-label">Current Turn:</span>
                         <span class="turn-player" id="currentTurnPlayer">-</span>
                     </div>
                 </div>
 
                 <div class="game-players" id="gamePlayers"></div>
 
-                <div class="game-grid-container">
-                    <div id="gameGrid" class="game-grid grid-4x4"></div>
+                <div class="battle-boards">
+                    <div class="board-section my-board-section">
+                        <h4 class="board-label">Your Board</h4>
+                        <p class="board-hint">Your bombs are shown</p>
+                        <div class="game-grid-container">
+                            <div id="myGrid" class="game-grid grid-4x4"></div>
+                        </div>
+                    </div>
+
+                    <div class="board-section opponent-board-section">
+                        <h4 class="board-label">Opponent's Board</h4>
+                        <p class="board-hint">Click to attack!</p>
+                        <div class="game-grid-container">
+                            <div id="opponentGrid" class="game-grid grid-4x4"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bomb-tracker">
+                    <span>Bombs found: <strong id="bombsFoundCount">0</strong> / <strong id="bombsTotalCount">4</strong></span>
+                    <span class="tracker-warning">Finding all bombs = YOU LOSE!</span>
                 </div>
             </div>
 
             <div id="gameOverPanel" class="panel hidden">
                 <div class="game-over-content">
                     <h2 class="game-over-title">Game Over!</h2>
-                    <div class="winner-display">
-                        <span class="winner-label">Winner</span>
-                        <span class="winner-name" id="winnerName">-</span>
+                    <div class="result-display">
+                        <div class="winner-display">
+                            <span class="result-label">Winner</span>
+                            <span class="winner-name" id="winnerName">-</span>
+                        </div>
+                        <div class="loser-display">
+                            <span class="result-label">Found All Bombs</span>
+                            <span class="loser-name" id="loserName">-</span>
+                        </div>
                     </div>
+                    <p class="game-over-reason" id="gameOverReason"></p>
                     <div class="game-over-actions">
                         <button id="playAgainBtn" class="btn-primary">Play Again</button>
                         <a href="/minigame/games" class="btn-secondary">Back to Games</a>
