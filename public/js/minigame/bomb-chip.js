@@ -425,7 +425,6 @@
             const odejde = p.user._id || p.user;
             return '<div class="game-player" data-user-id="' + odejde + '">' +
                 '<span class="game-player-name">' + escapeHtml(p.username) + '</span>' +
-                '<span class="game-player-status">Bombs hit: ' + (p.bombsHitOnMyBoard || 0) + '</span>' +
                 '</div>';
         }).join('');
     }

@@ -379,7 +379,6 @@ body {
     gap: 0.75rem;
 }
 
-/* Placement Phase */
 .placing-header {
     display: flex;
     justify-content: space-between;
@@ -458,7 +457,6 @@ body {
     border-color: var(--text-warning) !important;
 }
 
-/* Game Phase */
 .game-header {
     text-align: center;
     padding-bottom: 1rem;
@@ -498,7 +496,6 @@ body {
 .game-player-name { font-weight: 500; font-size: 0.9rem; }
 .game-player-status { font-size: 0.75rem; color: var(--text-muted); display: block; }
 
-/* Battle Boards - Two Board Layout */
 .battle-boards {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -568,27 +565,31 @@ body {
 
 .chip:active:not([disabled]):not(.my-chip) { transform: scale(0.95); }
 
-/* My board chips - not clickable */
 .my-chip {
     cursor: default;
 }
 
 .my-chip.chip--has-bomb {
-    background: linear-gradient(135deg, #2a1a1a, #3d2020);
-    border-color: #5a3030;
+    background: linear-gradient(135deg, var(--bg-success), #1a4d2e);
+    border-color: var(--success);
+    opacity: 1;
 }
 
 .my-chip.chip--revealed {
-    opacity: 0.7;
+    opacity: 0;
+    background: transparent;
+    border-color: transparent;
+    transform: scale(0.85);
+    pointer-events: none;
 }
 
 .my-chip.chip--bomb-hit {
-    background: linear-gradient(135deg, var(--bg-warning), #5d2f2f);
-    border-color: var(--text-warning);
+    background: linear-gradient(135deg, color-mix(in srgb, var(--bg-success) 70%, #000 30%), #1a4d2e);
+    border-color: var(--success);
+    opacity: 1;
     animation: pulse 0.5s ease-in-out;
 }
 
-/* Opponent board chips */
 .opponent-chip.chip--revealed {
     cursor: default;
     transform: none !important;
@@ -616,7 +617,6 @@ body {
     50% { transform: scale(1.1); }
 }
 
-/* Bomb Tracker */
 .bomb-tracker {
     text-align: center;
     padding: 1rem;
@@ -636,7 +636,6 @@ body {
     color: var(--text-warning);
 }
 
-/* Game Over */
 .game-over-content { text-align: center; padding: 2rem 0; }
 .game-over-title { font-size: 1.5rem; margin-bottom: 1.5rem; }
 
@@ -683,7 +682,6 @@ body {
     gap: 0.75rem;
 }
 
-/* Responsive */
 @media (max-width: 700px) {
     .battle-boards {
         grid-template-columns: 1fr;
@@ -710,4 +708,22 @@ body {
     .room-code { font-size: 1.5rem; }
     .game-player { min-width: calc(50% - 0.25rem); }
     .placing-header { flex-direction: column; gap: 0.5rem; text-align: center; }
+}
+
+.chip--bomb,
+.chip--bomb-placed,
+.my-chip.chip--has-bomb,
+.my-chip.chip--bomb-hit {
+    font-size: 0;
+}
+
+.chip--bomb::before,
+.chip--bomb-placed::before,
+.my-chip.chip--has-bomb::before,
+.my-chip.chip--bomb-hit::before {
+    content: '';
+    width: 26px;
+    height: 26px;
+    display: block;
+    background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%3E%0A%3Cpath%20fill%3D%22%23FFFFFF%22%20d%3D%22M10.1%203.4c.8-.8%202-.8%202.8%200l.7.7c.3.3.7.4%201.1.2l1-.5c.7-.3%201.6-.2%202.1.4.6.6.7%201.4.4%202.1l-.5%201c-.2.4-.1.8.2%201.1l.7.7c.8.8.8%202%200%202.8l-.7.7c-.3.3-.4.7-.2%201.1l.5%201c.3.7.2%201.6-.4%202.1-.6.6-1.4.7-2.1.4l-1-.5c-.4-.2-.8-.1-1.1.2l-.7.7c-.8.8-2%20.8-2.8%200l-.7-.7c-.3-.3-.7-.4-1.1-.2l-1%20.5c-.7.3-1.6.2-2.1-.4-.6-.6-.7-1.4-.4-2.1l.5-1c.2-.4.1-.8-.2-1.1l-.7-.7c-.8-.8-.8-2%200-2.8l.7-.7c.3-.3.4-.7.2-1.1l-.5-1c-.3-.7-.2-1.6.4-2.1.6-.6%201.4-.7%202.1-.4l1%20.5c.4.2.8.1%201.1-.2l.7-.7z%22/%3E%0A%3Cpath%20fill%3D%22%23FFFFFF%22%20d%3D%22M18.3%202.3a1%201%200%200%201%201.4%200l.6.6.6-.6a1%201%200%200%201%201.4%201.4l-.6.6.6.6a1%201%200%201%201-1.4%201.4l-.6-.6-.6.6a1%201%200%201%201-1.4-1.4l.6-.6-.6-.6a1%201%200%200%201%200-1.4z%22/%3E%0A%3C/svg%3E") center/contain no-repeat;
 }
