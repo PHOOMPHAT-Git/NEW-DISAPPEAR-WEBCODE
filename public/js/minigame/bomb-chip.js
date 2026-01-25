@@ -10,7 +10,8 @@
         players: [],
         grid: [],
         myTurn: false,
-        inviteToken: null
+        inviteToken: null,
+        pendingInvites: []
     };
 
     const panels = {
@@ -116,6 +117,11 @@
             gameState.bombCount = data.gameConfig.bombCount;
             gameState.status = 'waiting';
 
+            gameState.pendingInvites = gameState.pendingInvites.filter(
+                inv => inv.roomCode !== data.roomCode
+            );
+            renderPendingInvites();
+
             updateWaitingRoom();
             showPanel('waiting');
             toast.success('Joined room ' + data.roomCode);
@@ -184,6 +190,18 @@
         });
 
         socket.on('invite:received', (data) => {
+            const existingIndex = gameState.pendingInvites.findIndex(
+                inv => inv.roomCode === data.roomCode
+            );
+            if (existingIndex === -1) {
+                gameState.pendingInvites.push({
+                    from: data.from,
+                    roomCode: data.roomCode,
+                    inviteToken: data.inviteToken,
+                    gameType: data.gameType
+                });
+            }
+            renderPendingInvites();
             toast.info(data.from.username + ' invited you to play BombChip!');
         });
 
@@ -329,6 +347,7 @@
     }
 
     function resetGameState() {
+        const savedInvites = gameState.pendingInvites;
         gameState = {
             roomCode: null,
             isHost: false,
@@ -338,7 +357,8 @@
             players: [],
             grid: [],
             myTurn: false,
-            inviteToken: null
+            inviteToken: null,
+            pendingInvites: savedInvites
         };
     }
 
@@ -361,6 +381,36 @@
         div.textContent = text;
         return div.innerHTML;
     }
+
+    function renderPendingInvites() {
+        const section = document.getElementById('invitedRoomsSection');
+        const list = document.getElementById('invitedRoomsList');
+
+        if (gameState.pendingInvites.length === 0) {
+            section.classList.add('hidden');
+            return;
+        }
+
+        section.classList.remove('hidden');
+        list.innerHTML = gameState.pendingInvites.map((invite, index) => {
+            return '<div class="invited-room-item">' +
+                '<div class="invited-room-info">' +
+                '<span class="invited-room-from">' + escapeHtml(invite.from.username) + '</span>' +
+                '<span class="invited-room-code">Room: ' + escapeHtml(invite.roomCode) + '</span>' +
+                '</div>' +
+                '<button class="btn-join-invite" onclick="joinViaInvite(' + index + ')">Join</button>' +
+                '</div>';
+        }).join('');
+    }
+
+    window.joinViaInvite = function(index) {
+        const invite = gameState.pendingInvites[index];
+        if (!invite) return;
+
+        socket.emit('room:join-invite', { inviteToken: invite.inviteToken });
+        gameState.pendingInvites.splice(index, 1);
+        renderPendingInvites();
+    };
 
     window.inviteFriend = function(userId) {
         if (!gameState.roomCode) return;
