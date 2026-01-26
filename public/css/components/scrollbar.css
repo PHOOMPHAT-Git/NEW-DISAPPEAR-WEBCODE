@@ -1,5 +1,20 @@
 :root {
     --scrollbar-thumb: #aaa;
+    --scrollbar-width: 3.5px;
+}
+
+html {
+    scrollbar-gutter: stable;
+}
+
+@supports not (scrollbar-gutter: stable) {
+    body {
+        padding-right: var(--scrollbar-width);
+    }
+
+    body:has(::-webkit-scrollbar) {
+        padding-right: 0;
+    }
 }
 
 ::-webkit-scrollbar {

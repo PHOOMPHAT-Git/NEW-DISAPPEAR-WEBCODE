@@ -27,16 +27,28 @@
 
             <div class="stats-bar">
                 <div class="stat-item">
+                    <span class="stat-label">Total Games</span>
+                    <span class="stat-value" id="totalGames"><%= stats.totalGames || 0 %></span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Wins</span>
+                    <span class="stat-value" id="totalWins"><%= stats.wins || 0 %></span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Losses</span>
+                    <span class="stat-value" id="totalLosses"><%= stats.losses || 0 %></span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Win Rate</span>
+                    <span class="stat-value" id="winRate"><%= stats.totalGames > 0 ? Math.round((stats.wins || 0) / stats.totalGames * 100) : 0 %>%</span>
+                </div>
+                <div class="stat-item">
                     <span class="stat-label">Current Streak</span>
                     <span class="stat-value" id="currentStreak"><%= stats.currentStreak || 0 %></span>
                 </div>
                 <div class="stat-item">
                     <span class="stat-label">Best Streak</span>
                     <span class="stat-value" id="bestStreak"><%= stats.bestStreak || 0 %></span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Wins</span>
-                    <span class="stat-value" id="totalWins"><%= stats.wins || 0 %></span>
                 </div>
             </div>
 

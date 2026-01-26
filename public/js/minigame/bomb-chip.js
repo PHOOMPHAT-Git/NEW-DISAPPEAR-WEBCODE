@@ -281,9 +281,20 @@
                     inviteToken: data.inviteToken,
                     gameType: data.gameType
                 });
+                toast.info(data.from.username + ' invited you to play Bomb Chip!');
             }
             renderPendingInvites();
-            toast.info(data.from.username + ' invited you to play Bomb Chip!');
+        });
+
+        socket.on('invite:cancelled', (data) => {
+            const index = gameState.pendingInvites.findIndex(
+                inv => inv.roomCode === data.roomCode
+            );
+            if (index !== -1) {
+                gameState.pendingInvites.splice(index, 1);
+                renderPendingInvites();
+                toast.info('Room ' + data.roomCode + ' has been closed');
+            }
         });
 
         socket.on('invite:sent', () => {
@@ -641,7 +652,7 @@
             if (boardSection) {
                 const hint = boardSection.querySelector('.board-hint');
                 if (hint) {
-                    hint.textContent = 'Bombs: ' + data.bombsHit + '/' + data.bombsTotal;
+                    hint.textContent = 'Bombs : ' + data.bombsHit + ' / ' + data.bombsTotal;
                 }
             }
 
@@ -740,9 +751,14 @@
             const res = await fetch('/minigame/bomb-chip/api/stats');
             const data = await res.json();
             if (data.success) {
-                document.getElementById('currentStreak').textContent = data.stats.currentStreak || 0;
-                document.getElementById('bestStreak').textContent = data.stats.bestStreak || 0;
-                document.getElementById('totalWins').textContent = data.stats.wins || 0;
+                const stats = data.stats;
+                document.getElementById('totalGames').textContent = stats.totalGames || 0;
+                document.getElementById('totalWins').textContent = stats.wins || 0;
+                document.getElementById('totalLosses').textContent = stats.losses || 0;
+                const winRate = stats.totalGames > 0 ? Math.round((stats.wins || 0) / stats.totalGames * 100) : 0;
+                document.getElementById('winRate').textContent = winRate + '%';
+                document.getElementById('currentStreak').textContent = stats.currentStreak || 0;
+                document.getElementById('bestStreak').textContent = stats.bestStreak || 0;
             }
         } catch (e) {
             console.error('Failed to fetch stats:', e);

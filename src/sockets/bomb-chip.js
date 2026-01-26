@@ -138,8 +138,38 @@ module.exports = function(io, sessionMiddleware) {
         }
     });
 
-    gameIo.on('connection', (socket) => {
+    gameIo.on('connection', async (socket) => {
         console.log(`User ${socket.username} connected to bomb-chip`);
+
+        // Send pending invitations to the user on connection
+        try {
+            const pendingInvites = await GameInvitation.find({
+                to: socket.userId,
+                status: 'pending'
+            }).populate('from', 'username');
+
+            for (const invite of pendingInvites) {
+                // Check if the game still exists and is waiting
+                const game = await BombChipGame.findOne({
+                    _id: invite.game,
+                    status: 'waiting'
+                });
+
+                if (game) {
+                    socket.emit('invite:received', {
+                        from: { id: invite.from._id, username: invite.from.username },
+                        gameType: 'bombchip',
+                        roomCode: invite.roomCode,
+                        inviteToken: game.inviteToken
+                    });
+                } else {
+                    // Clean up stale invitation
+                    await GameInvitation.deleteOne({ _id: invite._id });
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching pending invitations:', error);
+        }
 
         socket.on('room:create', async (data) => {
             try {
@@ -282,6 +312,12 @@ module.exports = function(io, sessionMiddleware) {
                 });
 
                 await game.save();
+
+                // Mark invitation as accepted
+                await GameInvitation.updateMany(
+                    { to: socket.userId, game: game._id, status: 'pending' },
+                    { status: 'accepted' }
+                );
 
                 socket.join(game.roomCode);
                 userRooms.set(socket.userId, game.roomCode);
@@ -709,6 +745,24 @@ module.exports = function(io, sessionMiddleware) {
                 game.players = game.players.filter(p => p.user.toString() !== socket.userId);
 
                 if (game.players.length === 0) {
+                    // Delete all pending invitations for this room and notify invited users
+                    const pendingInvites = await GameInvitation.find({
+                        game: game._id,
+                        status: 'pending'
+                    });
+
+                    for (const invite of pendingInvites) {
+                        const targetSockets = Array.from(gameIo.sockets.values()).filter(
+                            s => s.userId === invite.to.toString()
+                        );
+                        targetSockets.forEach(s => {
+                            s.emit('invite:cancelled', {
+                                roomCode: game.roomCode
+                            });
+                        });
+                    }
+
+                    await GameInvitation.deleteMany({ game: game._id });
                     await BombChipGame.deleteOne({ _id: game._id });
                 } else if (game.host.toString() === socket.userId) {
                     game.host = game.players[0].user;
