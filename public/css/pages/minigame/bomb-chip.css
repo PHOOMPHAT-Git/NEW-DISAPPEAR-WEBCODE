@@ -125,7 +125,8 @@ body {
 
 .button-group { display: flex; gap: 0.5rem; }
 
-.size-btn {
+.size-btn,
+.players-btn {
     flex: 1;
     padding: 0.75rem;
     background: transparent;
@@ -138,8 +139,11 @@ body {
     transition: all 0.2s;
 }
 
-.size-btn:hover { background: var(--bg-card); color: var(--text-primary); }
-.size-btn.active {
+.size-btn:hover,
+.players-btn:hover { background: var(--bg-card); color: var(--text-primary); }
+
+.size-btn.active,
+.players-btn.active {
     background: color-mix(in srgb, var(--gold-secondary) 15%, transparent);
     border-color: var(--gold-dark);
     color: var(--gold-primary);
@@ -480,6 +484,40 @@ body {
 .game-player-name { font-weight: 500; font-size: 0.9rem; }
 .game-player-status { font-size: 0.75rem; color: var(--text-muted); display: block; }
 
+.game-player--eliminated {
+    opacity: 0.5;
+    border-color: var(--text-warning);
+    text-decoration: line-through;
+}
+
+.turn-order {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    background: var(--divider);
+    border-radius: 50%;
+    font-size: 0.7rem;
+    font-weight: 600;
+    margin-right: 0.5rem;
+}
+
+.game-player--active .turn-order {
+    background: var(--gold-primary);
+    color: var(--text-black);
+}
+
+.eliminated-badge {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.4rem;
+    background: var(--text-warning);
+    border-radius: 3px;
+    color: #fff;
+    font-weight: 600;
+    margin-left: 0.5rem;
+}
+
 .battle-boards {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -509,6 +547,42 @@ body {
 
 .my-board-section .board-label { color: var(--text-warning); }
 .opponent-board-section .board-label { color: var(--success); }
+
+.opponent-boards-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.opponent-board-section {
+    padding: 1rem;
+    border: 2px solid var(--divider);
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.opponent-board-section.selected {
+    border-color: var(--gold-primary);
+    background: color-mix(in srgb, var(--gold-secondary) 5%, transparent);
+}
+
+.opponent-board-section.eliminated {
+    opacity: 0.5;
+    border-color: var(--text-warning);
+}
+
+.opponent-board-section.eliminated .board-label {
+    color: var(--text-warning);
+}
+
+.opponent-board-header {
+    cursor: pointer;
+    margin-bottom: 0.5rem;
+}
+
+.opponent-board-header:hover .board-label {
+    color: var(--gold-primary);
+}
 
 .game-grid-container {
     display: flex;
@@ -664,6 +738,8 @@ body {
     .battle-boards { grid-template-columns: 1fr; gap: 1.5rem; }
     .game-grid { max-width: 250px; }
     .result-display { flex-direction: column; gap: 1.5rem; }
+    .opponent-boards-container { gap: 1rem; }
+    .opponent-board-section { padding: 0.75rem; }
 }
 
 @media (max-width: 520px) {
@@ -672,7 +748,8 @@ body {
     .stat-item { min-width: calc(33% - 0.75rem); }
     .lobby-tabs { flex-direction: column; }
     .button-group { flex-wrap: wrap; }
-    .size-btn { flex: 1 1 calc(50% - 0.25rem); }
+    .size-btn,
+    .players-btn { flex: 1 1 calc(50% - 0.25rem); }
     .room-code { font-size: 1.5rem; }
     .game-player { min-width: calc(50% - 0.25rem); }
     .placing-header { flex-direction: column; gap: 0.5rem; text-align: center; }

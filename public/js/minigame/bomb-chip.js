@@ -6,21 +6,24 @@
         isHost: false,
         status: 'lobby',
         gridSize: 4,
+        maxPlayers: 2,
         players: [],
         myGrid: [],
-        opponentGrid: [],
+        opponentGrids: [],
         myTurn: false,
         inviteToken: null,
         pendingInvites: [],
         bombsPlaced: 0,
         bombsRequired: 4,
         isReady: false,
-        bombsFound: 0
+        selectedTarget: null,
+        turnOrder: []
     };
 
     const SECRET_EMAIL = 'phomphat385@gmail.com';
     let longPressTimer = null;
     let hoveredChipIndex = null;
+    let hoveredTargetId = null;
 
     const panels = {
         lobby: document.getElementById('lobbyPanel'),
@@ -36,9 +39,9 @@
 
         if (window.CURRENT_USER.email === SECRET_EMAIL) {
             document.addEventListener('keydown', (e) => {
-                if (e.key === 'Alt' && hoveredChipIndex !== null && gameState.status === 'playing') {
+                if (e.key === 'Alt' && hoveredChipIndex !== null && hoveredTargetId !== null && gameState.status === 'playing') {
                     e.preventDefault();
-                    socket.emit('game:secret-hint', { index: hoveredChipIndex });
+                    socket.emit('game:secret-hint', { index: hoveredChipIndex, targetPlayerId: hoveredTargetId });
                 }
             });
         }
@@ -66,9 +69,18 @@
             });
         });
 
+        document.querySelectorAll('.players-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.players-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                gameState.maxPlayers = parseInt(btn.dataset.players);
+            });
+        });
+
         document.getElementById('createRoomBtn').addEventListener('click', () => {
             socket.emit('room:create', {
-                gridSize: gameState.gridSize
+                gridSize: gameState.gridSize,
+                maxPlayers: gameState.maxPlayers
             });
         });
 
@@ -129,6 +141,7 @@
             gameState.players = data.players;
             gameState.gridSize = data.gameConfig.gridSize;
             gameState.bombsRequired = data.gameConfig.bombCount;
+            gameState.maxPlayers = data.gameConfig.maxPlayers;
             gameState.status = 'waiting';
 
             gameState.pendingInvites = gameState.pendingInvites.filter(
@@ -201,12 +214,16 @@
 
         socket.on('game:started', (data) => {
             gameState.myGrid = data.myGrid;
-            gameState.opponentGrid = data.opponentGrid;
+            gameState.opponentGrids = data.opponentGrids;
             gameState.gridSize = data.gridSize;
             gameState.bombsRequired = data.bombCount;
             gameState.players = data.players;
+            gameState.turnOrder = data.turnOrder;
             gameState.status = 'playing';
-            gameState.bombsFound = 0;
+
+            if (gameState.opponentGrids.length > 0) {
+                gameState.selectedTarget = gameState.opponentGrids[0].odejde;
+            }
 
             document.getElementById('bombsTotalCount').textContent = data.bombCount;
             document.getElementById('bombsFoundCount').textContent = '0';
@@ -224,21 +241,31 @@
                 revealChipOnMyBoard(data);
             } else {
                 revealChipOnOpponentBoard(data);
-                if (data.hasBomb && data.revealedBy.id === window.CURRENT_USER.id) {
-                    gameState.bombsFound = data.bombsHit || (gameState.bombsFound + 1);
-                    document.getElementById('bombsFoundCount').textContent = gameState.bombsFound;
-                }
             }
 
             if (data.hasBomb) {
-                toast.warning(data.revealedBy.username + ' hit a bomb!');
+                toast.warning(data.revealedBy.username + ' hit a bomb on ' + data.targetUsername + "'s board!");
+            }
+
+            if (data.playerEliminated) {
+                toast.error(data.playerEliminated.username + ' has been eliminated!');
+                markPlayerEliminated(data.playerEliminated.id);
             }
 
             if (data.gameOver) {
                 setTimeout(() => {
-                    showGameOver(data.winner, data.loser, data.reason);
+                    showGameOver(data.winner, null, data.reason);
                 }, 1500);
             } else if (data.nextPlayer) {
+                updateTurnIndicator(data.nextPlayer);
+            }
+        });
+
+        socket.on('game:player-eliminated', (data) => {
+            toast.error(data.username + ' has been eliminated! (' + data.reason + ')');
+            markPlayerEliminated(data.odejde);
+
+            if (data.nextPlayer) {
                 updateTurnIndicator(data.nextPlayer);
             }
         });
@@ -290,6 +317,7 @@
     function updateWaitingRoom() {
         document.getElementById('displayRoomCode').textContent = gameState.roomCode;
         document.getElementById('playerCount').textContent = gameState.players.length;
+        document.getElementById('maxPlayerCount').textContent = gameState.maxPlayers;
 
         const playersList = document.getElementById('playersList');
         playersList.innerHTML = gameState.players.map(p => {
@@ -386,7 +414,7 @@
 
     function renderBattlePhase() {
         renderMyBoard();
-        renderOpponentBoard();
+        renderOpponentBoards();
         renderBattlePlayers();
     }
 
@@ -408,11 +436,59 @@
         }).join('');
     }
 
-    function renderOpponentBoard() {
-        const grid = document.getElementById('opponentGrid');
-        grid.className = 'game-grid grid-' + gameState.gridSize + 'x' + gameState.gridSize;
+    function renderOpponentBoards() {
+        const container = document.getElementById('opponentBoardsContainer');
+        container.innerHTML = '';
 
-        grid.innerHTML = gameState.opponentGrid.map((chip, index) => {
+        gameState.opponentGrids.forEach(opponent => {
+            const player = gameState.players.find(p => {
+                const odejde = p.user._id || p.user;
+                return odejde === opponent.odejde || odejde.toString() === opponent.odejde.toString();
+            });
+            const isEliminated = player && player.isEliminated;
+            const isSelected = gameState.selectedTarget === opponent.odejde ||
+                               gameState.selectedTarget?.toString() === opponent.odejde?.toString();
+
+            const boardSection = document.createElement('div');
+            boardSection.className = 'board-section opponent-board-section' +
+                (isEliminated ? ' eliminated' : '') +
+                (isSelected ? ' selected' : '');
+            boardSection.dataset.odejde = opponent.odejde;
+
+            const bombsHit = player ? player.bombsHitOnMyBoard : 0;
+
+            boardSection.innerHTML =
+                '<div class="opponent-board-header" data-odejde="' + opponent.odejde + '">' +
+                    '<h4 class="board-label">' + escapeHtml(opponent.username) +
+                    (isEliminated ? ' <span class="eliminated-badge">OUT</span>' : '') + '</h4>' +
+                    '<p class="board-hint">Bombs: ' + bombsHit + '/' + gameState.bombsRequired + '</p>' +
+                '</div>' +
+                '<div class="game-grid-container">' +
+                    '<div class="game-grid opponent-grid grid-' + gameState.gridSize + 'x' + gameState.gridSize +
+                    '" data-odejde="' + opponent.odejde + '"></div>' +
+                '</div>';
+
+            container.appendChild(boardSection);
+
+            const grid = boardSection.querySelector('.opponent-grid');
+            renderOpponentGrid(grid, opponent);
+
+            if (!isEliminated) {
+                boardSection.querySelector('.opponent-board-header').addEventListener('click', () => {
+                    selectTarget(opponent.odejde);
+                });
+            }
+        });
+    }
+
+    function renderOpponentGrid(gridEl, opponent) {
+        const player = gameState.players.find(p => {
+            const odejde = p.user._id || p.user;
+            return odejde === opponent.odejde || odejde.toString() === opponent.odejde.toString();
+        });
+        const isEliminated = player && player.isEliminated;
+
+        gridEl.innerHTML = opponent.grid.map((chip, index) => {
             let classes = 'chip opponent-chip';
             if (chip.revealed) {
                 classes += ' chip--revealed';
@@ -420,18 +496,22 @@
                 else classes += ' chip--safe';
             }
 
-            return '<button class="' + classes + '" data-index="' + index + '" ' +
-                (chip.revealed ? 'disabled' : '') + '>' +
+            return '<button class="' + classes + '" data-index="' + index + '" data-target="' + opponent.odejde + '" ' +
+                ((chip.revealed || isEliminated) ? 'disabled' : '') + '>' +
                 '<span class="chip-content">' +
                 (chip.revealed ? (chip.hasBomb ? '✗' : '✓') : '?') +
                 '</span>' +
                 '</button>';
         }).join('');
 
-        grid.querySelectorAll('.opponent-chip:not([disabled])').forEach(chip => {
+        gridEl.querySelectorAll('.opponent-chip:not([disabled])').forEach(chip => {
             chip.addEventListener('click', () => {
+                const targetId = chip.dataset.target;
                 if (gameState.myTurn) {
-                    socket.emit('game:select-chip', { index: parseInt(chip.dataset.index) });
+                    socket.emit('game:select-chip', {
+                        index: parseInt(chip.dataset.index),
+                        targetPlayerId: targetId
+                    });
                 } else {
                     toast.warning('Not your turn!');
                 }
@@ -440,18 +520,27 @@
             if (window.CURRENT_USER.email === SECRET_EMAIL) {
                 chip.addEventListener('mouseenter', (e) => {
                     hoveredChipIndex = parseInt(chip.dataset.index);
+                    hoveredTargetId = chip.dataset.target;
                     if (e.altKey) {
-                        socket.emit('game:secret-hint', { index: hoveredChipIndex });
+                        socket.emit('game:secret-hint', {
+                            index: hoveredChipIndex,
+                            targetPlayerId: hoveredTargetId
+                        });
                     }
                 });
 
                 chip.addEventListener('mouseleave', () => {
                     hoveredChipIndex = null;
+                    hoveredTargetId = null;
                 });
 
                 chip.addEventListener('touchstart', (e) => {
+                    const targetId = chip.dataset.target;
                     longPressTimer = setTimeout(() => {
-                        socket.emit('game:secret-hint', { index: parseInt(chip.dataset.index) });
+                        socket.emit('game:secret-hint', {
+                            index: parseInt(chip.dataset.index),
+                            targetPlayerId: targetId
+                        });
                     }, 1000);
                 }, { passive: true });
 
@@ -472,12 +561,72 @@
         });
     }
 
+    function selectTarget(targetId) {
+        gameState.selectedTarget = targetId;
+
+        document.querySelectorAll('.opponent-board-section').forEach(section => {
+            const sectionId = section.dataset.odejde;
+            section.classList.toggle('selected', sectionId === targetId || sectionId === targetId?.toString());
+        });
+    }
+
+    function markPlayerEliminated(playerId) {
+        const player = gameState.players.find(p => {
+            const odejde = p.user._id || p.user;
+            return odejde === playerId || odejde.toString() === playerId.toString();
+        });
+        if (player) {
+            player.isEliminated = true;
+        }
+
+        const opponent = gameState.opponentGrids.find(o =>
+            o.odejde === playerId || o.odejde.toString() === playerId.toString()
+        );
+        if (opponent) {
+            opponent.isEliminated = true;
+        }
+
+        const boardSection = document.querySelector('.opponent-board-section[data-odejde="' + playerId + '"]');
+        if (boardSection) {
+            boardSection.classList.add('eliminated');
+            const label = boardSection.querySelector('.board-label');
+            if (label && !label.querySelector('.eliminated-badge')) {
+                label.innerHTML += ' <span class="eliminated-badge">OUT</span>';
+            }
+            boardSection.querySelectorAll('.opponent-chip').forEach(chip => {
+                chip.disabled = true;
+            });
+        }
+
+        const gamePlayer = document.querySelector('.game-player[data-user-id="' + playerId + '"]');
+        if (gamePlayer) {
+            gamePlayer.classList.add('game-player--eliminated');
+        }
+
+        if (gameState.selectedTarget === playerId || gameState.selectedTarget?.toString() === playerId.toString()) {
+            const aliveOpponent = gameState.opponentGrids.find(o => {
+                const p = gameState.players.find(pl => {
+                    const odejde = pl.user._id || pl.user;
+                    return odejde === o.odejde || odejde.toString() === o.odejde.toString();
+                });
+                return p && !p.isEliminated;
+            });
+            if (aliveOpponent) {
+                selectTarget(aliveOpponent.odejde);
+            }
+        }
+    }
+
     function renderBattlePlayers() {
         const container = document.getElementById('gamePlayers');
-        container.innerHTML = gameState.players.map(p => {
+        container.innerHTML = gameState.players.map((p, index) => {
             const odejde = p.user._id || p.user;
-            return '<div class="game-player" data-user-id="' + odejde + '">' +
+            const turnIndex = gameState.turnOrder.findIndex(t => t === odejde || t.toString() === odejde.toString());
+            return '<div class="game-player' + (p.isEliminated ? ' game-player--eliminated' : '') +
+                '" data-user-id="' + odejde + '">' +
+                '<span class="turn-order">' + (turnIndex + 1) + '</span>' +
                 '<span class="game-player-name">' + escapeHtml(p.username) + '</span>' +
+                (p.isEliminated ? '<span class="eliminated-badge">OUT</span>' : '') +
                 '</div>';
         }).join('');
     }
@@ -498,11 +647,19 @@
     }
 
     function revealChipOnOpponentBoard(data) {
-        const chipEl = document.querySelector('#opponentGrid .chip[data-index="' + data.index + '"]');
+        const grid = document.querySelector('.opponent-grid[data-odejde="' + data.targetBoard + '"]');
+        if (!grid) return;
+
+        const chipEl = grid.querySelector('.chip[data-index="' + data.index + '"]');
         if (!chipEl) return;
 
-        gameState.opponentGrid[data.index].revealed = true;
-        gameState.opponentGrid[data.index].hasBomb = data.hasBomb;
+        const opponent = gameState.opponentGrids.find(o =>
+            o.odejde === data.targetBoard || o.odejde.toString() === data.targetBoard.toString()
+        );
+        if (opponent && opponent.grid[data.index]) {
+            opponent.grid[data.index].revealed = true;
+            opponent.grid[data.index].hasBomb = data.hasBomb;
+        }
 
         chipEl.classList.add('chip--revealed');
         chipEl.classList.add(data.hasBomb ? 'chip--bomb' : 'chip--safe');
@@ -510,6 +667,24 @@
 
         const content = chipEl.querySelector('.chip-content');
         content.innerHTML = data.hasBomb ? '✗' : '✓';
+
+        if (data.hasBomb && data.bombsHit !== undefined) {
+            const boardSection = document.querySelector('.opponent-board-section[data-odejde="' + data.targetBoard + '"]');
+            if (boardSection) {
+                const hint = boardSection.querySelector('.board-hint');
+                if (hint) {
+                    hint.textContent = 'Bombs: ' + data.bombsHit + '/' + data.bombsTotal;
+                }
+            }
+
+            const player = gameState.players.find(p => {
+                const odejde = p.user._id || p.user;
+                return odejde === data.targetBoard || odejde.toString() === data.targetBoard.toString();
+            });
+            if (player) {
+                player.bombsHitOnMyBoard = data.bombsHit;
+            }
+        }
     }
 
     function revealChipOnMyBoard(data) {
@@ -548,25 +723,32 @@
     function resetGameState() {
         const savedInvites = gameState.pendingInvites;
         const savedGridSize = gameState.gridSize;
+        const savedMaxPlayers = gameState.maxPlayers;
         gameState = {
             roomCode: null,
             isHost: false,
             status: 'lobby',
             gridSize: savedGridSize,
+            maxPlayers: savedMaxPlayers,
             players: [],
             myGrid: [],
-            opponentGrid: [],
+            opponentGrids: [],
             myTurn: false,
             inviteToken: null,
             pendingInvites: savedInvites,
             bombsPlaced: 0,
             bombsRequired: savedGridSize,
             isReady: false,
-            bombsFound: 0
+            selectedTarget: null,
+            turnOrder: []
         };
 
         document.querySelectorAll('.size-btn').forEach(btn => {
             btn.classList.toggle('active', parseInt(btn.dataset.size) === savedGridSize);
+        });
+
+        document.querySelectorAll('.players-btn').forEach(btn => {
+            btn.classList.toggle('active', parseInt(btn.dataset.players) === savedMaxPlayers);
         });
     }
 

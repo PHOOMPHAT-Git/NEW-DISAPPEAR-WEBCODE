@@ -57,6 +57,17 @@
                         </div>
                     </div>
                     <p class="form-hint">Bomb count = Grid size ( 3x3 = 3 bombs, 4x4 = 4 bombs, etc. )</p>
+
+                    <div class="form-group">
+                        <label class="form-label">Number of Players</label>
+                        <div class="button-group">
+                            <button class="players-btn active" data-players="2">2 Players</button>
+                            <button class="players-btn" data-players="3">3 Players</button>
+                            <button class="players-btn" data-players="4">4 Players</button>
+                        </div>
+                    </div>
+                    <p class="form-hint">Last player standing wins!</p>
+
                     <button id="createRoomBtn" class="btn-primary">Create Room</button>
                 </div>
 
@@ -97,7 +108,7 @@
                 </div>
 
                 <div class="players-section">
-                    <h3 class="players-title">Players ( <span id="playerCount">1</span> / 2 )</h3>
+                    <h3 class="players-title">Players ( <span id="playerCount">1</span> / <span id="maxPlayerCount">2</span> )</h3>
                     <div id="playersList" class="players-list"></div>
                 </div>
 
@@ -131,7 +142,7 @@
 
                 <div class="placing-instructions">
                     <p>Click cells to place bombs on your board.</p>
-                    <p class="warning-text">If opponent finds ALL your bombs, they LOSE!</p>
+                    <p class="warning-text">If opponent finds ALL your bombs, you LOSE!</p>
                 </div>
 
                 <div class="placing-players" id="placingPlayers"></div>
@@ -165,12 +176,7 @@
                         </div>
                     </div>
 
-                    <div class="board-section opponent-board-section">
-                        <h4 class="board-label">Opponent's Board</h4>
-                        <p class="board-hint">Click to attack!</p>
-                        <div class="game-grid-container">
-                            <div id="opponentGrid" class="game-grid grid-4x4"></div>
-                        </div>
+                    <div class="opponent-boards-container" id="opponentBoardsContainer">
                     </div>
                 </div>
 

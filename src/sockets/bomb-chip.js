@@ -38,18 +38,30 @@ function createEmptyGrid(gridSize) {
     return grid;
 }
 
-function getPlayerGridKey(game, playerId) {
-    const playerIndex = game.players.findIndex(p => p.user.toString() === playerId.toString());
-    return playerIndex === 0 ? 'player1Grid' : 'player2Grid';
+function getPlayerGrid(game, playerId) {
+    const playerGrid = game.playerGrids.find(pg => pg.playerId.toString() === playerId.toString());
+    return playerGrid ? playerGrid.grid : null;
 }
 
-function getOpponentGridKey(game, playerId) {
-    const playerIndex = game.players.findIndex(p => p.user.toString() === playerId.toString());
-    return playerIndex === 0 ? 'player2Grid' : 'player1Grid';
+function getAlivePlayers(game) {
+    return game.players.filter(p => !p.isEliminated);
 }
 
-function getOpponentPlayer(game, playerId) {
-    return game.players.find(p => p.user.toString() !== playerId.toString());
+function getNextAlivePlayerIndex(game, currentIndex) {
+    const totalPlayers = game.turnOrder.length;
+    let nextIndex = (currentIndex + 1) % totalPlayers;
+    let checked = 0;
+
+    while (checked < totalPlayers) {
+        const playerId = game.turnOrder[nextIndex];
+        const player = game.players.find(p => p.user.toString() === playerId.toString());
+        if (player && !player.isEliminated) {
+            return nextIndex;
+        }
+        nextIndex = (nextIndex + 1) % totalPlayers;
+        checked++;
+    }
+    return -1;
 }
 
 async function updateStats(game) {
@@ -77,8 +89,39 @@ async function updateStats(game) {
     }
 }
 
+const ROOM_EXPIRE_MINUTES = 30;
+
+async function cleanupStaleRooms() {
+    try {
+        const cutoffTime = new Date(Date.now() - ROOM_EXPIRE_MINUTES * 60 * 1000);
+
+        const staleRooms = await BombChipGame.deleteMany({
+            status: 'waiting',
+            created_at: { $lt: cutoffTime }
+        });
+
+        if (staleRooms.deletedCount > 0) {
+            console.log(`[Bomb-Chip Cleanup] Deleted ${staleRooms.deletedCount} stale waiting rooms`);
+        }
+
+        const staleInvitations = await GameInvitation.deleteMany({
+            status: 'pending',
+            created_at: { $lt: cutoffTime }
+        });
+
+        if (staleInvitations.deletedCount > 0) {
+            console.log(`[Bomb-Chip Cleanup] Deleted ${staleInvitations.deletedCount} stale invitations`);
+        }
+    } catch (error) {
+        console.error('[Bomb-Chip Cleanup] Error:', error);
+    }
+}
+
 module.exports = function(io, sessionMiddleware) {
     const gameIo = io.of('/bomb-chip');
+
+    setInterval(cleanupStaleRooms, 5 * 60 * 1000);
+    cleanupStaleRooms();
 
     gameIo.use((socket, next) => {
         sessionMiddleware(socket.request, {}, next);
@@ -100,7 +143,7 @@ module.exports = function(io, sessionMiddleware) {
 
         socket.on('room:create', async (data) => {
             try {
-                const { gridSize = 4 } = data;
+                const { gridSize = 4, maxPlayers = 2 } = data;
                 const bombCount = getBombCount(gridSize);
 
                 let roomCode;
@@ -114,12 +157,14 @@ module.exports = function(io, sessionMiddleware) {
                     roomCode,
                     host: socket.userId,
                     gridSize,
+                    maxPlayers,
                     inviteToken: generateInviteToken(),
                     players: [{
                         user: socket.userId,
                         username: socket.username,
                         bombsPlaced: false,
-                        bombsHitOnMyBoard: 0
+                        bombsHitOnMyBoard: 0,
+                        isEliminated: false
                     }]
                 });
 
@@ -132,7 +177,7 @@ module.exports = function(io, sessionMiddleware) {
                     roomCode,
                     inviteToken: game.inviteToken,
                     players: game.players,
-                    gameConfig: { gridSize, bombCount },
+                    gameConfig: { gridSize, bombCount, maxPlayers },
                     isHost: true
                 });
             } catch (error) {
@@ -157,15 +202,16 @@ module.exports = function(io, sessionMiddleware) {
                     return socket.emit('error', { message: 'Already in this room' });
                 }
 
-                if (game.players.length >= 2) {
-                    return socket.emit('error', { message: 'Room is full (max 2 players)' });
+                if (game.players.length >= game.maxPlayers) {
+                    return socket.emit('error', { message: `Room is full (max ${game.maxPlayers} players)` });
                 }
 
                 game.players.push({
                     user: socket.userId,
                     username: socket.username,
                     bombsPlaced: false,
-                    bombsHitOnMyBoard: 0
+                    bombsHitOnMyBoard: 0,
+                    isEliminated: false
                 });
 
                 await game.save();
@@ -177,7 +223,11 @@ module.exports = function(io, sessionMiddleware) {
                     roomCode,
                     inviteToken: game.inviteToken,
                     players: game.players,
-                    gameConfig: { gridSize: game.gridSize, bombCount: getBombCount(game.gridSize) },
+                    gameConfig: {
+                        gridSize: game.gridSize,
+                        bombCount: getBombCount(game.gridSize),
+                        maxPlayers: game.maxPlayers
+                    },
                     isHost: game.host.toString() === socket.userId
                 });
 
@@ -210,20 +260,25 @@ module.exports = function(io, sessionMiddleware) {
                         roomCode: game.roomCode,
                         inviteToken: game.inviteToken,
                         players: game.players,
-                        gameConfig: { gridSize: game.gridSize, bombCount: getBombCount(game.gridSize) },
+                        gameConfig: {
+                            gridSize: game.gridSize,
+                            bombCount: getBombCount(game.gridSize),
+                            maxPlayers: game.maxPlayers
+                        },
                         isHost: game.host.toString() === socket.userId
                     });
                 }
 
-                if (game.players.length >= 2) {
-                    return socket.emit('error', { message: 'Room is full (max 2 players)' });
+                if (game.players.length >= game.maxPlayers) {
+                    return socket.emit('error', { message: `Room is full (max ${game.maxPlayers} players)` });
                 }
 
                 game.players.push({
                     user: socket.userId,
                     username: socket.username,
                     bombsPlaced: false,
-                    bombsHitOnMyBoard: 0
+                    bombsHitOnMyBoard: 0,
+                    isEliminated: false
                 });
 
                 await game.save();
@@ -235,7 +290,11 @@ module.exports = function(io, sessionMiddleware) {
                     roomCode: game.roomCode,
                     inviteToken: game.inviteToken,
                     players: game.players,
-                    gameConfig: { gridSize: game.gridSize, bombCount: getBombCount(game.gridSize) },
+                    gameConfig: {
+                        gridSize: game.gridSize,
+                        bombCount: getBombCount(game.gridSize),
+                        maxPlayers: game.maxPlayers
+                    },
                     isHost: game.host.toString() === socket.userId
                 });
 
@@ -249,7 +308,6 @@ module.exports = function(io, sessionMiddleware) {
             }
         });
 
-        // Start placement phase
         socket.on('game:start-placing', async () => {
             try {
                 const roomCode = userRooms.get(socket.userId);
@@ -262,12 +320,14 @@ module.exports = function(io, sessionMiddleware) {
                     return socket.emit('error', { message: 'Only host can start the game' });
                 }
 
-                if (game.players.length !== 2) {
-                    return socket.emit('error', { message: 'Need exactly 2 players' });
+                if (game.players.length < 2) {
+                    return socket.emit('error', { message: 'Need at least 2 players' });
                 }
 
-                game.player1Grid = createEmptyGrid(game.gridSize);
-                game.player2Grid = createEmptyGrid(game.gridSize);
+                game.playerGrids = game.players.map(p => ({
+                    playerId: p.user,
+                    grid: createEmptyGrid(game.gridSize)
+                }));
                 game.status = 'placing';
                 game.placing_started_at = new Date();
 
@@ -290,7 +350,6 @@ module.exports = function(io, sessionMiddleware) {
             }
         });
 
-        // Place bomb on own grid
         socket.on('game:place-bomb', async (data) => {
             try {
                 const { index } = data;
@@ -307,8 +366,10 @@ module.exports = function(io, sessionMiddleware) {
                     return socket.emit('error', { message: 'You have already finished placing bombs' });
                 }
 
-                const gridKey = getPlayerGridKey(game, socket.userId);
-                const grid = game[gridKey];
+                const playerGridData = game.playerGrids.find(pg => pg.playerId.toString() === socket.userId);
+                if (!playerGridData) return socket.emit('error', { message: 'Grid not found' });
+
+                const grid = playerGridData.grid;
                 const bombCount = getBombCount(game.gridSize);
 
                 if (index < 0 || index >= grid.length) {
@@ -343,7 +404,6 @@ module.exports = function(io, sessionMiddleware) {
             }
         });
 
-        // Player ready after placing bombs
         socket.on('game:ready', async () => {
             try {
                 const roomCode = userRooms.get(socket.userId);
@@ -355,8 +415,10 @@ module.exports = function(io, sessionMiddleware) {
                 const player = game.players.find(p => p.user.toString() === socket.userId);
                 if (!player) return socket.emit('error', { message: 'Player not found' });
 
-                const gridKey = getPlayerGridKey(game, socket.userId);
-                const grid = game[gridKey];
+                const playerGridData = game.playerGrids.find(pg => pg.playerId.toString() === socket.userId);
+                if (!playerGridData) return socket.emit('error', { message: 'Grid not found' });
+
+                const grid = playerGridData.grid;
                 const bombCount = getBombCount(game.gridSize);
                 const placedBombs = grid.filter(c => c.hasBomb).length;
 
@@ -393,24 +455,32 @@ module.exports = function(io, sessionMiddleware) {
                             s => s.userId === p.user.toString()
                         );
 
-                        const myGridKey = getPlayerGridKey(game, p.user);
-                        const opponentGridKey = getOpponentGridKey(game, p.user);
-
-                        const myGrid = game[myGridKey].map(chip => ({
+                        const myGridData = game.playerGrids.find(pg => pg.playerId.toString() === p.user.toString());
+                        const myGrid = myGridData ? myGridData.grid.map(chip => ({
                             index: chip.index,
                             hasBomb: chip.hasBomb,
                             revealed: chip.revealed
-                        }));
+                        })) : [];
 
-                        const opponentGrid = game[opponentGridKey].map(chip => ({
-                            index: chip.index,
-                            revealed: chip.revealed
-                        }));
+                        const opponentGrids = game.players
+                            .filter(op => op.user.toString() !== p.user.toString())
+                            .map(op => {
+                                const opGridData = game.playerGrids.find(pg => pg.playerId.toString() === op.user.toString());
+                                return {
+                                    odejde: op.user,
+                                    username: op.username,
+                                    grid: opGridData ? opGridData.grid.map(chip => ({
+                                        index: chip.index,
+                                        revealed: chip.revealed,
+                                        hasBomb: chip.revealed ? chip.hasBomb : undefined
+                                    })) : []
+                                };
+                            });
 
                         targetSockets.forEach(s => {
                             s.emit('game:started', {
                                 myGrid,
-                                opponentGrid,
+                                opponentGrids,
                                 gridSize: game.gridSize,
                                 bombCount: getBombCount(game.gridSize),
                                 currentPlayer: {
@@ -420,8 +490,10 @@ module.exports = function(io, sessionMiddleware) {
                                 players: game.players.map(pl => ({
                                     user: pl.user,
                                     username: pl.username,
-                                    bombsHitOnMyBoard: pl.bombsHitOnMyBoard
-                                }))
+                                    bombsHitOnMyBoard: pl.bombsHitOnMyBoard,
+                                    isEliminated: pl.isEliminated
+                                })),
+                                turnOrder: game.turnOrder
                             });
                         });
                     });
@@ -432,10 +504,9 @@ module.exports = function(io, sessionMiddleware) {
             }
         });
 
-        // Select chip on opponent's grid
         socket.on('game:select-chip', async (data) => {
             try {
-                const { index } = data;
+                const { index, targetPlayerId } = data;
                 const roomCode = userRooms.get(socket.userId);
                 if (!roomCode) return;
 
@@ -447,11 +518,26 @@ module.exports = function(io, sessionMiddleware) {
                     return socket.emit('error', { message: 'Not your turn' });
                 }
 
-                const opponentGridKey = getOpponentGridKey(game, socket.userId);
-                const opponentGrid = game[opponentGridKey];
-                const opponent = getOpponentPlayer(game, socket.userId);
+                if (targetPlayerId === socket.userId) {
+                    return socket.emit('error', { message: 'Cannot attack your own board' });
+                }
 
-                const chip = opponentGrid[index];
+                const targetPlayer = game.players.find(p => p.user.toString() === targetPlayerId);
+                if (!targetPlayer) {
+                    return socket.emit('error', { message: 'Target player not found' });
+                }
+
+                if (targetPlayer.isEliminated) {
+                    return socket.emit('error', { message: 'Target player is already eliminated' });
+                }
+
+                const targetGridData = game.playerGrids.find(pg => pg.playerId.toString() === targetPlayerId);
+                if (!targetGridData) {
+                    return socket.emit('error', { message: 'Target grid not found' });
+                }
+
+                const targetGrid = targetGridData.grid;
+                const chip = targetGrid[index];
                 if (!chip) {
                     return socket.emit('error', { message: 'Invalid chip selection' });
                 }
@@ -468,34 +554,47 @@ module.exports = function(io, sessionMiddleware) {
                     index,
                     hasBomb: chip.hasBomb,
                     revealedBy: { id: socket.userId, username: socket.username },
-                    targetBoard: opponent.user.toString()
+                    targetBoard: targetPlayerId,
+                    targetUsername: targetPlayer.username
                 };
 
                 if (chip.hasBomb) {
-                    opponent.bombsHitOnMyBoard += 1;
-                    result.bombsHit = opponent.bombsHitOnMyBoard;
+                    targetPlayer.bombsHitOnMyBoard += 1;
+                    result.bombsHit = targetPlayer.bombsHitOnMyBoard;
                     result.bombsTotal = bombCount;
 
-                    if (opponent.bombsHitOnMyBoard >= bombCount) {
-                        game.status = 'finished';
-                        game.loser = socket.userId;
-                        game.winner = opponent.user;
-                        game.finished_at = new Date();
-                        result.gameOver = true;
-                        result.winner = { id: opponent.user, username: opponent.username };
-                        result.loser = { id: socket.userId, username: socket.username };
-                        result.reason = 'Found all bombs';
+                    if (targetPlayer.bombsHitOnMyBoard >= bombCount) {
+                        targetPlayer.isEliminated = true;
+                        if (!game.losers) game.losers = [];
+                        game.losers.push(targetPlayer.user);
+                        result.playerEliminated = {
+                            id: targetPlayer.user,
+                            username: targetPlayer.username
+                        };
 
-                        await updateStats(game);
+                        const alivePlayers = getAlivePlayers(game);
+                        if (alivePlayers.length === 1) {
+                            game.status = 'finished';
+                            game.winner = alivePlayers[0].user;
+                            game.finished_at = new Date();
+                            result.gameOver = true;
+                            result.winner = { id: alivePlayers[0].user, username: alivePlayers[0].username };
+                            result.reason = 'Last player standing';
+
+                            await updateStats(game);
+                        }
                     }
                 }
 
                 if (!result.gameOver) {
-                    game.currentTurnIndex = (game.currentTurnIndex + 1) % 2;
-                    const nextPlayer = game.players.find(
-                        p => p.user.toString() === game.turnOrder[game.currentTurnIndex].toString()
-                    );
-                    result.nextPlayer = { id: nextPlayer.user, username: nextPlayer.username };
+                    const nextIndex = getNextAlivePlayerIndex(game, game.currentTurnIndex);
+                    if (nextIndex !== -1) {
+                        game.currentTurnIndex = nextIndex;
+                        const nextPlayer = game.players.find(
+                            p => p.user.toString() === game.turnOrder[nextIndex].toString()
+                        );
+                        result.nextPlayer = { id: nextPlayer.user, username: nextPlayer.username };
+                    }
                 }
 
                 await game.save();
@@ -509,7 +608,7 @@ module.exports = function(io, sessionMiddleware) {
 
         socket.on('game:secret-hint', async (data) => {
             try {
-                const { index } = data;
+                const { index, targetPlayerId } = data;
                 const roomCode = userRooms.get(socket.userId);
                 if (!roomCode) return;
 
@@ -519,14 +618,16 @@ module.exports = function(io, sessionMiddleware) {
                 const game = await BombChipGame.findOne({ roomCode, status: 'playing' });
                 if (!game) return;
 
-                const opponentGridKey = getOpponentGridKey(game, socket.userId);
-                const opponentGrid = game[opponentGridKey];
-                const chip = opponentGrid[index];
+                const targetGridData = game.playerGrids.find(pg => pg.playerId.toString() === targetPlayerId);
+                if (!targetGridData) return;
+
+                const chip = targetGridData.grid[index];
 
                 if (!chip || chip.revealed) return;
 
                 socket.emit('game:secret-hint-result', {
                     index,
+                    targetPlayerId,
                     isSafe: !chip.hasBomb
                 });
             } catch (error) {
@@ -624,36 +725,61 @@ module.exports = function(io, sessionMiddleware) {
                     username: socket.username,
                     playerCount: game.players.length
                 });
-            } else if (game.status === 'placing') {
-                const remainingPlayer = game.players.find(p => p.user.toString() !== socket.userId);
-                if (remainingPlayer) {
-                    game.status = 'finished';
-                    game.winner = remainingPlayer.user;
-                    game.loser = socket.userId;
-                    game.finished_at = new Date();
-                    await game.save();
-                    await updateStats(game);
-
-                    gameIo.to(roomCode).emit('game:finished', {
-                        winner: { id: remainingPlayer.user, username: remainingPlayer.username },
-                        loser: { id: socket.userId, username: socket.username },
-                        reason: 'Opponent left during placement'
-                    });
+            } else if (game.status === 'placing' || game.status === 'playing') {
+                const leavingPlayer = game.players.find(p => p.user.toString() === socket.userId);
+                if (leavingPlayer) {
+                    leavingPlayer.isEliminated = true;
+                    if (!game.losers) game.losers = [];
+                    game.losers.push(leavingPlayer.user);
                 }
-            } else if (game.status === 'playing') {
-                const remainingPlayer = game.players.find(p => p.user.toString() !== socket.userId);
-                if (remainingPlayer) {
+
+                const alivePlayers = getAlivePlayers(game);
+
+                if (alivePlayers.length === 1) {
                     game.status = 'finished';
-                    game.winner = remainingPlayer.user;
-                    game.loser = socket.userId;
+                    game.winner = alivePlayers[0].user;
                     game.finished_at = new Date();
                     await game.save();
                     await updateStats(game);
 
                     gameIo.to(roomCode).emit('game:finished', {
-                        winner: { id: remainingPlayer.user, username: remainingPlayer.username },
+                        winner: { id: alivePlayers[0].user, username: alivePlayers[0].username },
                         loser: { id: socket.userId, username: socket.username },
                         reason: 'Opponent left the game'
+                    });
+                } else if (alivePlayers.length === 0) {
+                    game.status = 'finished';
+                    game.finished_at = new Date();
+                    await game.save();
+
+                    gameIo.to(roomCode).emit('game:finished', {
+                        winner: null,
+                        reason: 'All players left'
+                    });
+                } else {
+                    if (game.status === 'playing') {
+                        const currentPlayerId = game.turnOrder[game.currentTurnIndex].toString();
+                        if (currentPlayerId === socket.userId) {
+                            const nextIndex = getNextAlivePlayerIndex(game, game.currentTurnIndex);
+                            if (nextIndex !== -1) {
+                                game.currentTurnIndex = nextIndex;
+                            }
+                        }
+                    }
+                    await game.save();
+
+                    gameIo.to(roomCode).emit('game:player-eliminated', {
+                        odejde: socket.userId,
+                        username: socket.username,
+                        reason: 'Player left',
+                        nextPlayer: game.status === 'playing' ? {
+                            id: game.turnOrder[game.currentTurnIndex],
+                            username: game.players.find(p => p.user.toString() === game.turnOrder[game.currentTurnIndex].toString())?.username
+                        } : null,
+                        alivePlayers: alivePlayers.map(p => ({
+                            user: p.user,
+                            username: p.username
+                        }))
                     });
                 }
             }

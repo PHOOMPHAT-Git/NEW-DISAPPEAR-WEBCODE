@@ -7,10 +7,16 @@ const ChipSchema = new mongoose.Schema({
     revealedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, { _id: false });
 
+const PlayerGridSchema = new mongoose.Schema({
+    playerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    grid: [ChipSchema]
+}, { _id: false });
+
 const BombChipGameSchema = new mongoose.Schema({
     roomCode: { type: String, required: true, unique: true, index: true },
     host: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     gridSize: { type: Number, enum: [3, 4, 5, 6], default: 4 },
+    maxPlayers: { type: Number, enum: [2, 3, 4], default: 2 },
     status: {
         type: String,
         enum: ['waiting', 'placing', 'playing', 'finished'],
@@ -21,14 +27,14 @@ const BombChipGameSchema = new mongoose.Schema({
         username: String,
         bombsPlaced: { type: Boolean, default: false },
         bombsHitOnMyBoard: { type: Number, default: 0 },
+        isEliminated: { type: Boolean, default: false },
         joinedAt: { type: Date, default: Date.now }
     }],
-    player1Grid: [ChipSchema],
-    player2Grid: [ChipSchema],
+    playerGrids: [PlayerGridSchema],
     currentTurnIndex: { type: Number, default: 0 },
     turnOrder: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     winner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    loser: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    losers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     inviteToken: { type: String, unique: true, sparse: true },
     invitedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     created_at: { type: Date, default: Date.now },
