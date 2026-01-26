@@ -561,10 +561,6 @@ body {
     transition: all 0.2s;
 }
 
-.opponent-board-section.selected {
-    border-color: var(--gold-primary);
-    background: color-mix(in srgb, var(--gold-secondary) 5%, transparent);
-}
 
 .opponent-board-section.eliminated {
     opacity: 0.5;
@@ -576,12 +572,7 @@ body {
 }
 
 .opponent-board-header {
-    cursor: pointer;
     margin-bottom: 0.5rem;
-}
-
-.opponent-board-header:hover .board-label {
-    color: var(--gold-primary);
 }
 
 .game-grid-container {

@@ -16,7 +16,6 @@
         bombsPlaced: 0,
         bombsRequired: 4,
         isReady: false,
-        selectedTarget: null,
         turnOrder: []
     };
 
@@ -221,9 +220,6 @@
             gameState.turnOrder = data.turnOrder;
             gameState.status = 'playing';
 
-            if (gameState.opponentGrids.length > 0) {
-                gameState.selectedTarget = gameState.opponentGrids[0].odejde;
-            }
 
             document.getElementById('bombsTotalCount').textContent = data.bombCount;
             document.getElementById('bombsFoundCount').textContent = '0';
@@ -446,13 +442,10 @@
                 return odejde === opponent.odejde || odejde.toString() === opponent.odejde.toString();
             });
             const isEliminated = player && player.isEliminated;
-            const isSelected = gameState.selectedTarget === opponent.odejde ||
-                               gameState.selectedTarget?.toString() === opponent.odejde?.toString();
 
             const boardSection = document.createElement('div');
             boardSection.className = 'board-section opponent-board-section' +
-                (isEliminated ? ' eliminated' : '') +
-                (isSelected ? ' selected' : '');
+                (isEliminated ? ' eliminated' : '');
             boardSection.dataset.odejde = opponent.odejde;
 
             const bombsHit = player ? player.bombsHitOnMyBoard : 0;
@@ -473,11 +466,6 @@
             const grid = boardSection.querySelector('.opponent-grid');
             renderOpponentGrid(grid, opponent);
 
-            if (!isEliminated) {
-                boardSection.querySelector('.opponent-board-header').addEventListener('click', () => {
-                    selectTarget(opponent.odejde);
-                });
-            }
         });
     }
 
@@ -561,14 +549,6 @@
         });
     }
 
-    function selectTarget(targetId) {
-        gameState.selectedTarget = targetId;
-
-        document.querySelectorAll('.opponent-board-section').forEach(section => {
-            const sectionId = section.dataset.odejde;
-            section.classList.toggle('selected', sectionId === targetId || sectionId === targetId?.toString());
-        });
-    }
 
     function markPlayerEliminated(playerId) {
         const player = gameState.players.find(p => {
@@ -603,18 +583,6 @@
             gamePlayer.classList.add('game-player--eliminated');
         }
 
-        if (gameState.selectedTarget === playerId || gameState.selectedTarget?.toString() === playerId.toString()) {
-            const aliveOpponent = gameState.opponentGrids.find(o => {
-                const p = gameState.players.find(pl => {
-                    const odejde = pl.user._id || pl.user;
-                    return odejde === o.odejde || odejde.toString() === o.odejde.toString();
-                });
-                return p && !p.isEliminated;
-            });
-            if (aliveOpponent) {
-                selectTarget(aliveOpponent.odejde);
-            }
-        }
     }
 
     function renderBattlePlayers() {
@@ -684,7 +652,23 @@
             if (player) {
                 player.bombsHitOnMyBoard = data.bombsHit;
             }
+
+            updateBombsFoundCount();
         }
+    }
+
+    function updateBombsFoundCount() {
+        let totalBombsFound = 0;
+        gameState.opponentGrids.forEach(opponent => {
+            const player = gameState.players.find(p => {
+                const odejde = p.user._id || p.user;
+                return odejde === opponent.odejde || odejde.toString() === opponent.odejde.toString();
+            });
+            if (player) {
+                totalBombsFound += player.bombsHitOnMyBoard || 0;
+            }
+        });
+        document.getElementById('bombsFoundCount').textContent = totalBombsFound;
     }
 
     function revealChipOnMyBoard(data) {
@@ -739,7 +723,6 @@
             bombsPlaced: 0,
             bombsRequired: savedGridSize,
             isReady: false,
-            selectedTarget: null,
             turnOrder: []
         };
 
