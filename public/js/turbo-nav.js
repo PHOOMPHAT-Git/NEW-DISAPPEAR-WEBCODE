@@ -227,53 +227,48 @@
     }
 
     async function updateHead(newHead) {
-        const newStyles = new Set(
-            Array.from(newHead.querySelectorAll('link[rel="stylesheet"]'))
-                .map(l => l.href)
-        );
+        const newStyleHrefs = Array.from(newHead.querySelectorAll('link[rel="stylesheet"]'))
+            .map(l => l.href);
 
-        // Remove old page-specific stylesheets that are not in the new page
-        document.head.querySelectorAll('link[rel="stylesheet"]').forEach(link => {
-            // Keep common stylesheets (components, fonts, etc.)
-            const isCommon = link.href.includes('/components/') ||
-                           link.href.includes('fonts.googleapis.com') ||
-                           link.href.includes('/alert.css');
+        const isCommonStylesheet = (href) =>
+            href.includes('/components/') ||
+            href.includes('fonts.googleapis.com') ||
+            href.includes('/alert.css');
 
-            if (!isCommon && !newStyles.has(link.href)) {
-                link.remove();
-            }
-        });
+        // Current stylesheets in document
+        const currentLinks = Array.from(document.head.querySelectorAll('link[rel="stylesheet"]'));
+        const currentHrefs = new Set(currentLinks.map(l => l.href));
 
-        // Add new stylesheets and wait for them to load
-        const currentStyles = new Set(
-            Array.from(document.head.querySelectorAll('link[rel="stylesheet"]'))
-                .map(l => l.href)
-        );
-
+        // 1) Add missing new stylesheets FIRST
         const loadPromises = [];
+        for (const href of newStyleHrefs) {
+            if (currentHrefs.has(href)) continue;
 
-        newHead.querySelectorAll('link[rel="stylesheet"]').forEach(link => {
-            if (!currentStyles.has(link.href)) {
-                const newLink = document.createElement('link');
-                newLink.rel = 'stylesheet';
-                newLink.href = link.href;
+            const newLink = document.createElement('link');
+            newLink.rel = 'stylesheet';
+            newLink.href = href;
+            newLink.setAttribute('data-turbo', 'true');
 
-                // Create a promise that resolves when the stylesheet loads
-                const loadPromise = new Promise((resolve) => {
-                    newLink.onload = resolve;
-                    newLink.onerror = resolve; // Resolve even on error to not block
-                    // Timeout fallback in case onload doesn't fire
-                    setTimeout(resolve, 500);
-                });
+            const p = new Promise((resolve) => {
+                newLink.onload = resolve;
+                newLink.onerror = resolve;
+                setTimeout(resolve, 4000);
+            });
 
-                loadPromises.push(loadPromise);
-                document.head.appendChild(newLink);
-            }
-        });
+            loadPromises.push(p);
+            document.head.appendChild(newLink);
+        }
 
-        // Wait for all new stylesheets to load
-        if (loadPromises.length > 0) {
+        if (loadPromises.length) {
             await Promise.all(loadPromises);
+        }
+
+        // 2) THEN remove old page-specific stylesheets not in the new page
+        const newSet = new Set(newStyleHrefs);
+        for (const link of currentLinks) {
+            const href = link.href;
+            if (isCommonStylesheet(href)) continue;
+            if (!newSet.has(href)) link.remove();
         }
     }
 
