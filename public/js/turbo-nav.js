@@ -219,10 +219,8 @@
         // Re-initialize turbo nav listeners
         initListeners();
 
-        // Scroll to top
         window.scrollTo(0, 0);
 
-        // Dispatch event for other scripts
         window.dispatchEvent(new CustomEvent('turbo:load'));
     }
 
