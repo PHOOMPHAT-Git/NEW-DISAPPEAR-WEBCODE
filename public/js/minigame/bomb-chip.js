@@ -454,7 +454,7 @@
                 '<div class="opponent-board-header" data-odejde="' + opponent.odejde + '">' +
                     '<h4 class="board-label">' + escapeHtml(opponent.username) +
                     (isEliminated ? ' <span class="eliminated-badge">OUT</span>' : '') + '</h4>' +
-                    '<p class="board-hint">Bombs: ' + bombsHit + '/' + gameState.bombsRequired + '</p>' +
+                    '<p class="board-hint">Bombs : ' + bombsHit + ' / ' + gameState.bombsRequired + '</p>' +
                 '</div>' +
                 '<div class="game-grid-container">' +
                     '<div class="game-grid opponent-grid grid-' + gameState.gridSize + 'x' + gameState.gridSize +
