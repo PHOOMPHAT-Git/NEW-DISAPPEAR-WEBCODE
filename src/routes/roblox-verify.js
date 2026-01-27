@@ -7,6 +7,40 @@ const ROBLOX_CLIENT_ID = process.env.ROBLOX_CLIENT_ID;
 const ROBLOX_CLIENT_SECRET = process.env.ROBLOX_CLIENT_SECRET;
 const ROBLOX_REDIRECT_URI = process.env.ROBLOX_REDIRECT_URI || 'https://disappear.world/roblox/callback';
 const WEBSITE_URL = process.env.WEBSITE_URL || 'https://disappear.world';
+const BOT_API_URL = process.env.BOT_API_URL || '';
+const BOT_API_SECRET = process.env.BOT_API_SECRET || '';
+
+// Helper function to assign Discord role via bot API
+async function assignDiscordRole(discordUserId, guildId) {
+    if (!BOT_API_URL || !BOT_API_SECRET) {
+        console.error('[Roblox OAuth] BOT_API_URL or BOT_API_SECRET not configured');
+        return false;
+    }
+
+    try {
+        const response = await fetch(`${BOT_API_URL}/assign-role`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                discord_user_id: discordUserId,
+                guild_id: guildId,
+                secret: BOT_API_SECRET
+            })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            console.log(`[Roblox OAuth] Role assigned to ${discordUserId}`);
+            return true;
+        } else {
+            console.error('[Roblox OAuth] Failed to assign role:', data.error);
+            return false;
+        }
+    } catch (error) {
+        console.error('[Roblox OAuth] Error calling bot API:', error);
+        return false;
+    }
+}
 
 // Helper function to generate PKCE code verifier and challenge
 function generateCodeVerifier() {
@@ -193,6 +227,9 @@ router.get('/callback', async (req, res) => {
             { upsert: true, new: true }
         );
 
+        // Assign Discord role
+        await assignDiscordRole(oauthState.discord_user_id, oauthState.guild_id);
+
         // Clear session data
         delete req.session.robloxCodeVerifier;
         delete req.session.robloxState;
@@ -305,6 +342,9 @@ router.get('/start/:discordUserId/:guildId', async (req, res) => {
         });
 
         if (existingVerify) {
+            // Assign role even if already verified (in case they lost it)
+            await assignDiscordRole(discordUserId, guildId);
+
             return res.render('roblox-verify', {
                 success: true,
                 alreadyVerified: true,
