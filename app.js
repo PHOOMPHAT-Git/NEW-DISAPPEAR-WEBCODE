@@ -18,6 +18,7 @@ const accountRouter = require('./src/routes/account');
 const settingsRouter = require('./src/routes/settings');
 const friendsRouter = require('./src/routes/friends');
 const minigameRouter = require('./src/routes/minigame');
+const robloxVerifyRouter = require('./src/routes/roblox-verify');
 
 const bombChipSocket = require('./src/sockets/bomb-chip');
 
@@ -79,6 +80,7 @@ app.use('/account', accountRouter);
 app.use('/settings', settingsRouter);
 app.use('/friends', friendsRouter);
 app.use('/minigame', minigameRouter);
+app.use('/roblox', robloxVerifyRouter);
 
 app.use((req, res) => {
     res.status(404).render('error', {
