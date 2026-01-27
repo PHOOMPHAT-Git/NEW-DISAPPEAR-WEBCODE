@@ -60,7 +60,7 @@ router.get('/verify', async (req, res) => {
             client_id: ROBLOX_CLIENT_ID,
             redirect_uri: ROBLOX_REDIRECT_URI,
             response_type: 'code',
-            scope: 'openid profile',
+            scope: 'profile',
             state: state,
             code_challenge: codeChallenge,
             code_challenge_method: 'S256'
@@ -293,6 +293,51 @@ router.post('/create-state', async (req, res) => {
     } catch (error) {
         console.error('[Roblox OAuth] Create state error:', error);
         res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Direct verification link from Discord bot
+router.get('/start/:discordUserId/:guildId', async (req, res) => {
+    try {
+        const { discordUserId, guildId } = req.params;
+
+        if (!discordUserId || !guildId) {
+            return res.status(400).render('roblox-verify', {
+                success: false,
+                error: 'Invalid verification link.',
+                errorTH: 'ลิงก์ไม่ถูกต้อง'
+            });
+        }
+
+        // Generate state
+        const crypto = require('crypto');
+        const state = crypto.randomBytes(32).toString('hex');
+
+        // Delete any existing pending states for this user
+        await RobloxOAuthState.deleteMany({
+            discord_user_id: discordUserId,
+            status: 'pending'
+        });
+
+        // Create new state
+        const newState = new RobloxOAuthState({
+            state,
+            discord_user_id: discordUserId,
+            guild_id: guildId
+        });
+
+        await newState.save();
+
+        // Redirect to verify endpoint
+        res.redirect(`/roblox/verify?state=${state}`);
+
+    } catch (error) {
+        console.error('[Roblox OAuth] Start verification error:', error);
+        res.status(500).render('roblox-verify', {
+            success: false,
+            error: 'An error occurred. Please try again.',
+            errorTH: 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง'
+        });
     }
 });
 
