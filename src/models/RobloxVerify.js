@@ -23,6 +23,10 @@ const robloxVerifySchema = new mongoose.Schema({
     verified_at: {
         type: Date,
         default: Date.now
+    },
+    role_assigned: {
+        type: Boolean,
+        default: false
     }
 });
 

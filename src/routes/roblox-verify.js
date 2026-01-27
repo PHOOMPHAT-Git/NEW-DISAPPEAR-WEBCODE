@@ -11,13 +11,17 @@ const BOT_API_URL = process.env.BOT_API_URL || '';
 const BOT_API_SECRET = process.env.BOT_API_SECRET || '';
 
 // Helper function to assign Discord role via bot API
+// Note: This is optional - Bot can also poll /pending-roles endpoint instead
 async function assignDiscordRole(discordUserId, guildId) {
     if (!BOT_API_URL || !BOT_API_SECRET) {
-        console.error('[Roblox OAuth] BOT_API_URL or BOT_API_SECRET not configured');
+        console.log('[Roblox OAuth] BOT_API_URL not configured - bot will use polling instead');
         return false;
     }
 
     try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
         const response = await fetch(`${BOT_API_URL}/assign-role`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -25,8 +29,11 @@ async function assignDiscordRole(discordUserId, guildId) {
                 discord_user_id: discordUserId,
                 guild_id: guildId,
                 secret: BOT_API_SECRET
-            })
+            }),
+            signal: controller.signal
         });
+
+        clearTimeout(timeoutId);
 
         const data = await response.json();
         if (data.success) {
@@ -37,7 +44,8 @@ async function assignDiscordRole(discordUserId, guildId) {
             return false;
         }
     } catch (error) {
-        console.error('[Roblox OAuth] Error calling bot API:', error);
+        // Don't log as error - bot will handle via polling
+        console.log(`[Roblox OAuth] Could not reach bot API, role will be assigned via polling`);
         return false;
     }
 }
@@ -247,6 +255,58 @@ router.get('/callback', async (req, res) => {
             error: 'An unexpected error occurred. Please try again.',
             errorTH: 'เกิดข้อผิดพลาดที่ไม่คาดคิด กรุณาลองใหม่'
         });
+    }
+});
+
+// API endpoint for Discord bot to get pending role assignments
+router.get('/pending-roles', async (req, res) => {
+    try {
+        const { secret } = req.query;
+
+        if (secret !== BOT_API_SECRET) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+
+        // Find all verified users who need role assignment
+        const pendingUsers = await RobloxVerify.find({
+            status: 'verified',
+            role_assigned: { $ne: true }
+        }).limit(50);
+
+        res.json({
+            success: true,
+            users: pendingUsers.map(u => ({
+                discord_user_id: u.discord_user_id,
+                guild_id: u.guild_id,
+                roblox_user_id: u.roblox_user_id
+            }))
+        });
+
+    } catch (error) {
+        console.error('[Roblox OAuth] Pending roles error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// API endpoint for Discord bot to mark role as assigned
+router.post('/role-assigned', async (req, res) => {
+    try {
+        const { discord_user_id, secret } = req.body;
+
+        if (secret !== BOT_API_SECRET) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+
+        await RobloxVerify.findOneAndUpdate(
+            { discord_user_id },
+            { role_assigned: true }
+        );
+
+        res.json({ success: true });
+
+    } catch (error) {
+        console.error('[Roblox OAuth] Role assigned error:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
