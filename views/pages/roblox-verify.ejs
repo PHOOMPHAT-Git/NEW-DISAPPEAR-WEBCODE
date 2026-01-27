@@ -4,201 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Roblox Verification - Disappear</title>
+    <link rel="stylesheet" href="/css/pages/roblox-verify.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            padding: 20px;
-        }
-
-        .container {
-            text-align: center;
-            max-width: 420px;
-            width: 100%;
-        }
-
-        .icon {
-            width: 100px;
-            height: 100px;
-            margin: 0 auto 24px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        .icon-success {
-            background: linear-gradient(135deg, #00d166 0%, #00a854 100%);
-            box-shadow: 0 8px 32px rgba(0, 209, 102, 0.3);
-        }
-
-        .icon-error {
-            background: linear-gradient(135deg, #ff4757 0%, #c0392b 100%);
-            box-shadow: 0 8px 32px rgba(255, 71, 87, 0.3);
-        }
-
-        .icon svg {
-            width: 50px;
-            height: 50px;
-            stroke: #fff;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
-        .title {
-            font-size: 28px;
-            font-weight: 800;
-            margin-bottom: 12px;
-            background: linear-gradient(90deg, #fff 0%, #a8a8a8 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .title-success { color: #00d166; }
-        .title-error { color: #ff4757; }
-
-        .message {
-            font-size: 16px;
-            color: rgba(255, 255, 255, 0.7);
-            line-height: 1.6;
-            margin-bottom: 24px;
-        }
-
-        .user-info {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 24px;
-        }
-
-        .user-info-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-        }
-
-        .user-info-item:not(:last-child) {
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .user-info-label {
-            font-size: 14px;
-            color: rgba(255, 255, 255, 0.5);
-        }
-
-        .user-info-value {
-            font-size: 14px;
-            font-weight: 600;
-            color: #00d166;
-        }
-
-        .hint {
-            background: rgba(0, 209, 102, 0.1);
-            border: 1px solid rgba(0, 209, 102, 0.2);
-            border-radius: 8px;
-            padding: 16px;
-            margin-top: 16px;
-        }
-
-        .hint p {
-            font-size: 14px;
-            color: rgba(255, 255, 255, 0.8);
-            line-height: 1.5;
-        }
-
-        .hint-error {
-            background: rgba(255, 71, 87, 0.1);
-            border: 1px solid rgba(255, 71, 87, 0.2);
-        }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 14px 28px;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-decoration: none;
-            border: none;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #5865f2 0%, #4752c4 100%);
-            color: #fff;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(88, 101, 242, 0.4);
-        }
-
-        .btn svg {
-            width: 18px;
-            height: 18px;
-        }
-
-        .discord-logo {
-            width: 24px;
-            height: 24px;
-            margin-right: 4px;
-        }
-
-        .roblox-avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: 12px;
-            margin: 0 auto 16px;
-            border: 3px solid rgba(0, 209, 102, 0.5);
-        }
-    </style>
 </head>
 <body>
     <main class="container">
         <% if (typeof success !== 'undefined' && success) { %>
-            <div class="icon icon-success">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="20,6 9,17 4,12"/>
+            <div class="status-icon success">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                    <polyline points="22 4 12 14.01 9 11.01"/>
                 </svg>
             </div>
 
-            <h1 class="title">Verification Successful!</h1>
+            <% if (typeof alreadyVerified !== 'undefined' && alreadyVerified) { %>
+                <h1 class="status-title success">Already Verified</h1>
 
-            <p class="message">
-                Your Discord account has been linked to your Roblox account.
-                <br>
-                Discord ของคุณเชื่อมต่อกับ Roblox เรียบร้อยแล้ว
-            </p>
+                <p class="status-message">
+                    You have already verified your Roblox account.
+                    <br>
+                    คุณได้ยืนยัน Roblox แล้ว
+                </p>
+            <% } else { %>
+                <h1 class="status-title success">Verification Successful</h1>
+
+                <p class="status-message">
+                    Your Discord account has been linked to your Roblox account.
+                    <br>
+                    Discord ของคุณเชื่อมต่อกับ Roblox เรียบร้อยแล้ว
+                </p>
+            <% } %>
 
             <div class="user-info">
-                <div class="user-info-item">
-                    <span class="user-info-label">Roblox Username</span>
-                    <span class="user-info-value"><%= robloxUsername %></span>
-                </div>
                 <div class="user-info-item">
                     <span class="user-info-label">Roblox ID</span>
                     <span class="user-info-value"><%= robloxUserId %></span>
@@ -214,7 +53,7 @@
             </div>
 
         <% } else { %>
-            <div class="icon icon-error">
+            <div class="status-icon error">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10"/>
                     <line x1="15" y1="9" x2="9" y2="15"/>
@@ -222,15 +61,15 @@
                 </svg>
             </div>
 
-            <h1 class="title">Verification Failed</h1>
+            <h1 class="status-title error">Verification Failed</h1>
 
-            <p class="message">
+            <p class="status-message">
                 <%= typeof error !== 'undefined' ? error : 'An error occurred during verification.' %>
                 <br><br>
                 <%= typeof errorTH !== 'undefined' ? errorTH : 'เกิดข้อผิดพลาดระหว่างการยืนยันตัวตน' %>
             </p>
 
-            <div class="hint hint-error">
+            <div class="hint error">
                 <p>
                     Please return to Discord and request a new verification link.
                     <br>
@@ -238,6 +77,16 @@
                 </p>
             </div>
         <% } %>
+
+        <a href="/" class="btn btn-primary">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+            Back to Home
+        </a>
     </main>
+
+    <script src="/js/security.js"></script>
 </body>
 </html>

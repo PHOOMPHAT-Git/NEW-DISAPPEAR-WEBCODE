@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const RobloxOAuthState = require('../models/RobloxOAuthState');
+const RobloxVerify = require('../models/RobloxVerify');
 
 const ROBLOX_CLIENT_ID = process.env.ROBLOX_CLIENT_ID;
 const ROBLOX_CLIENT_SECRET = process.env.ROBLOX_CLIENT_SECRET;
@@ -157,40 +158,17 @@ router.get('/callback', async (req, res) => {
         }
 
         const tokenData = await tokenResponse.json();
-        const accessToken = tokenData.access_token;
 
-        // Get user info from Roblox
-        const userResponse = await fetch('https://apis.roblox.com/oauth/v1/userinfo', {
-            headers: {
-                'Authorization': `Bearer ${accessToken}`
-            }
-        });
+        // Decode ID token to get user ID (sub)
+        const idToken = tokenData.id_token;
+        let robloxUserId = null;
 
-        if (!userResponse.ok) {
-            console.error('[Roblox OAuth] Failed to get user info');
-
-            await RobloxOAuthState.findOneAndUpdate(
-                { state },
-                { status: 'error', error_message: 'Failed to get user info' }
-            );
-
-            return res.render('roblox-verify', {
-                success: false,
-                error: 'Failed to get Roblox user information.',
-                errorTH: 'ไม่สามารถดึงข้อมูลผู้ใช้ Roblox ได้'
-            });
+        if (idToken) {
+            // JWT format: header.payload.signature - decode payload
+            const payload = idToken.split('.')[1];
+            const decoded = JSON.parse(Buffer.from(payload, 'base64url').toString());
+            robloxUserId = parseInt(decoded.sub);
         }
-
-        const userData = await userResponse.json();
-
-        // Roblox userinfo returns:
-        // sub: Roblox user ID
-        // name: username
-        // nickname: display name
-        // preferred_username: username
-
-        const robloxUserId = parseInt(userData.sub);
-        const robloxUsername = userData.preferred_username || userData.name;
 
         // Update state with verified status
         await RobloxOAuthState.findOneAndUpdate(
@@ -198,9 +176,21 @@ router.get('/callback', async (req, res) => {
             {
                 status: 'verified',
                 roblox_user_id: robloxUserId,
-                roblox_username: robloxUsername,
                 verified_at: new Date()
             }
+        );
+
+        // Save to RobloxVerify (permanent record)
+        await RobloxVerify.findOneAndUpdate(
+            { discord_user_id: oauthState.discord_user_id },
+            {
+                discord_user_id: oauthState.discord_user_id,
+                roblox_user_id: robloxUserId,
+                guild_id: oauthState.guild_id,
+                status: 'verified',
+                verified_at: new Date()
+            },
+            { upsert: true, new: true }
         );
 
         // Clear session data
@@ -210,7 +200,6 @@ router.get('/callback', async (req, res) => {
         // Render success page
         res.render('roblox-verify', {
             success: true,
-            robloxUsername: robloxUsername,
             robloxUserId: robloxUserId
         });
 
@@ -306,6 +295,20 @@ router.get('/start/:discordUserId/:guildId', async (req, res) => {
                 success: false,
                 error: 'Invalid verification link.',
                 errorTH: 'ลิงก์ไม่ถูกต้อง'
+            });
+        }
+
+        // Check if user is already verified
+        const existingVerify = await RobloxVerify.findOne({
+            discord_user_id: discordUserId,
+            status: 'verified'
+        });
+
+        if (existingVerify) {
+            return res.render('roblox-verify', {
+                success: true,
+                alreadyVerified: true,
+                robloxUserId: existingVerify.roblox_user_id
             });
         }
 
