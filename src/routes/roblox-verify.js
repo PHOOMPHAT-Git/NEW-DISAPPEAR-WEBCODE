@@ -60,7 +60,7 @@ router.get('/verify', async (req, res) => {
             client_id: ROBLOX_CLIENT_ID,
             redirect_uri: ROBLOX_REDIRECT_URI,
             response_type: 'code',
-            scope: 'profile',
+            scope: 'openid',
             state: state,
             code_challenge: codeChallenge,
             code_challenge_method: 'S256'
