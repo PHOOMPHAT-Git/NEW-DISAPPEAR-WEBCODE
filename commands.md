@@ -104,13 +104,6 @@ npm install
 cp .env.example .env
 ```
 
-### Required .env variables
-```env
-PORT=3000
-MONGODB_URI=mongodb://localhost:27017/disappear
-SESSION_SECRET=your-secret-key
-```
-
 ---
 
 ## Database (MongoDB)
