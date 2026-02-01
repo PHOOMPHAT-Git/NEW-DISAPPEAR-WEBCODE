@@ -1,0 +1,31 @@
+:root {
+    --scrollbar-thumb: #aaa;
+    --scrollbar-width: 3.5px;
+}
+
+html {
+    scrollbar-gutter: stable;
+}
+
+@supports not (scrollbar-gutter: stable) {
+    body {
+        padding-right: var(--scrollbar-width);
+    }
+
+    body:has(::-webkit-scrollbar) {
+        padding-right: 0;
+    }
+}
+
+::-webkit-scrollbar {
+    width: 3.5px;
+}
+
+::-webkit-scrollbar-track {
+    background: #00000000;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(to bottom, var(--scrollbar-thumb), var(--scrollbar-thumb), var(--scrollbar-thumb));
+    transition: background-color 0.3s;
+}

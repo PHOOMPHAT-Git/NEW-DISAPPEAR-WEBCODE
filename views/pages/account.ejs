@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Disappear</title>
+    <link rel="stylesheet" href="/css/pages/account.css">
+    <link rel="stylesheet" href="/css/components/scrollbar.css">
+    <link rel="stylesheet" href="/css/alert.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <main class="container">
+        <a href="/" class="btn-back">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            Go Back
+        </a>
+
+        <section class="section">
+            <h2 class="section-title">Profile Information</h2>
+            <p class="section-subtitle">View and manage your personal account information</p>
+            <div class="info-group">
+                <div class="info-item">
+                    <span class="info-label">Username</span>
+                    <span class="info-value"><%= user.username %></span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Email Address</span>
+                    <span class="info-value">
+                        <%
+                        let displayEmail = user.email;
+                        if (user.settings && user.settings.hideEmail) {
+                            const atIndex = user.email.indexOf('@');
+                            if (atIndex > 1) {
+                                const hiddenPart = '•'.repeat(atIndex - 1);
+                                displayEmail = user.email.charAt(0) + hiddenPart + user.email.substring(atIndex);
+                            }
+                        }
+                        %>
+                        <%= displayEmail %>
+                    </span>
+                    <span class="info-description">This email is used for sign-in and notifications</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Member Since</span>
+                    <span class="info-value">
+                        <%
+                            const created = user.createdAt || (user._id && user._id.getTimestamp && user._id.getTimestamp());
+                        %>
+                        <%= created
+                            ? new Date(created).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+                            : '—'
+                        %>
+                    </span>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Friends Information</h2>
+            <p class="section-subtitle">Connect with friends and manage your social network</p>
+            <div class="info-group">
+                <div class="info-item">
+                    <span class="info-label">Add Friends</span>
+                    <span class="info-description">Search and connect with friends using their username</span>
+
+                    <div class="friend-input-wrapper">
+                        <input
+                            type="text"
+                            id="friendUsername"
+                            class="friend-input"
+                            placeholder="Enter username"
+                        />
+                        <button class="btn-item btn-secondary" onclick="addFriend()">
+                            <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                                <line x1="19" y1="8" x2="19" y2="14"/>
+                                <line x1="22" y1="11" x2="16" y2="11"/>
+                            </svg>
+                            Add
+                        </button>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Manage Friends</span>
+                    <span class="info-description">View your friends list and pending friend requests</span>
+
+                    <button class="btn-item btn-secondary" onclick="window.location.href='/friends'">
+                        <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                        View Friends
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Minigame Party</h2>
+            <p class="section-subtitle">Play fun minigames with your friends</p>
+            <div class="info-group">
+                <div class="info-item">
+                    <span class="info-label">Games Hub</span>
+                    <span class="info-description">Browse and play available minigames with friends</span>
+
+                    <button class="btn-item btn-secondary" onclick="window.location.href='/minigame/games'">
+                        <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="6" width="20" height="12" rx="2"/>
+                            <circle cx="12" cy="12" r="2"/>
+                            <path d="M6 12h.01M18 12h.01"/>
+                        </svg>
+                        Play Games
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Tools & Features</h2>
+            <p class="section-subtitle">Access additional tools and features to enhance your experience</p>
+            <div class="info-group">
+                <div class="info-item">
+                    <span class="info-label">Artificial Intelligence</span>
+                    <span class="info-description">Chat with AI assistant for help and support</span>
+
+                    <button class="btn-item btn-secondary" onclick="window.location.href='/ai-chat'">
+                        <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 6V2H8"/>
+                            <path d="m8 18-4 4V8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2Z"/>
+                            <path d="M2 12h2"/>
+                            <path d="M9 11v2"/>
+                            <path d="M15 11v2"/>
+                            <path d="M20 12h2"/>
+                        </svg>
+                        Open Chat
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Security & Privacy</h2>
+            <p class="section-subtitle">Manage your account security and privacy settings</p>
+            <div class="info-group">
+                <div class="info-item">
+                    <span class="info-label">Settings</span>
+                    <span class="info-description">Adjust your preferences and personalize your experience</span>
+
+                    <button class="btn-item btn-secondary" onclick="window.location.href='/settings'">
+                        <svg class="btn-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-wrench-icon lucide-wrench">
+                            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"/>
+                        </svg>
+                        Settings
+                    </button>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Sign Out</span>
+                    <span class="info-description">Sign out of your account on this device</span>
+
+                    <button class="btn-item btn-signout" onclick="window.location.href='/logout'">
+                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                            <polyline points="16 17 21 12 16 7"/>
+                            <line x1="21" y1="12" x2="9" y2="12"/>
+                        </svg>
+                        Sign Out
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="/js/alert.js"></script>
+    <script>
+        async function addFriend() {
+            const usernameInput = document.getElementById('friendUsername');
+            const username = usernameInput.value.trim();
+
+            if (!username) {
+                toast.warning('Please enter a username');
+                return;
+            }
+
+            try {
+                const response = await fetch('/friends/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    if (data.accepted) {
+                        toast.success(data.message || 'You are now friends!');
+                    } else {
+                        toast.success(data.message || 'Friend request sent!');
+                    }
+                    usernameInput.value = '';
+                } else {
+                    toast.error(data.message || 'Failed to add friend');
+                }
+            } catch (error) {
+                console.error('Error adding friend:', error);
+                toast.error('An error occurred while adding friend');
+            }
+        }
+
+        document.getElementById('friendUsername').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addFriend();
+            }
+        });
+    </script>
+    <script src="/js/security.js"></script>
+    <script src="/js/turbo-nav.js"></script>
+</body>
+</html>

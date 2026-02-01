@@ -1,0 +1,334 @@
+:root {
+    --gold-primary: #FFD700;
+    --gold-secondary: #DAA520;
+    --gold-dark: #B8860B;
+    --gold-darker: #8B6914;
+    --gold-light: #FFF8DC;
+    --bg-dark: #0d0d0d;
+    --bg-card: #1a1a1a;
+    --text-primary: #ffffff;
+    --text-secondary: #9ca3af;
+    --text-muted: #6b7280;
+    --text-black: #000000;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+}
+
+.container {
+    text-align: center;
+    z-index: 1;
+    position: relative;
+    padding: 20rem;
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.logo-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 8rem;
+    position: relative;
+}
+
+.logo-text {
+    font-size: 5rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    background: var(--text-primary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    background-size: 200% auto;
+    animation: shine 5s linear infinite;
+}
+
+.disclaimer {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    margin-bottom: 1.5rem;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.data-line {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    margin-bottom: 1.5rem;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.buttons {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.9rem 1.25rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    border: none;
+    outline: none;
+}
+
+.btn-primary {
+    background: var(--gold-secondary);
+    color: var(--text-black);
+}
+
+.btn-primary:hover {
+    background: var(--gold-dark);
+}
+
+.btn-secondary {
+    background: var(--bg-dark);
+    color: var(--text-primary);
+    border: 1px solid #2a2a2a;
+    padding: 0.9rem;
+    gap: 0;
+}
+
+.btn-secondary .btn-text {
+    display: grid;
+    grid-template-columns: 0fr;
+    overflow: hidden;
+    transition: grid-template-columns 0.3s ease, opacity 0.3s ease, padding-left 0.3s ease;
+    opacity: 0;
+    padding-left: 0;
+}
+
+.btn-secondary .btn-text span {
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.btn-secondary:hover {
+    background: var(--bg-card);
+}
+
+.btn-secondary:hover .btn-text {
+    grid-template-columns: 1fr;
+    opacity: 1;
+    padding-left: 0.5rem;
+}
+
+.btn-icon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
+
+.terms {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    margin-bottom: 0.5rem;
+}
+
+.terms a {
+    color: var(--text-muted);
+    transition: color 0.2s ease;
+}
+
+.terms a:hover {
+    color: var(--gold-secondary);
+    text-decoration: underline;
+}
+
+.btn-divider-vertical{
+    width: 1px;
+    height: 50px;
+    background: #2a2a2a;
+    opacity: 0.75;
+    align-self: center;
+    margin: 0 .25rem;
+}
+
+.status-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding: 1rem 1.5rem;
+    background: var(--bg-card);
+    border-radius: 12px;
+    border: 1px solid #2a2a2a;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #6b7280;
+    animation: pulse 2s infinite;
+}
+
+.status-indicator.online {
+    background: #22c55e;
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+}
+
+.status-indicator.offline {
+    background: #ef4444;
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+    animation: none;
+}
+
+.status-indicator.maintenance {
+    background: #f59e0b;
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+}
+
+.status-indicator.degraded {
+    background: #f97316;
+    box-shadow: 0 0 8px rgba(249, 115, 22, 0.5);
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.status-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.status-text {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: capitalize;
+}
+
+.status-divider {
+    width: 1px;
+    height: 24px;
+    background: #2a2a2a;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+
+    .logo-wrapper {
+        margin-bottom: 5rem;
+    }
+
+    .logo-text {
+        font-size: 4rem;
+        font-weight: 800;
+    }
+
+    .container > .buttons:first-of-type {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .container > .buttons:first-of-type .btn.btn-secondary {
+        background: var(--gold-secondary);
+        color: var(--text-black);
+        border: none;
+        width: 100%;
+        padding: 0.95rem 1.1rem;
+        border-radius: 8px;
+        flex-direction: row;
+        justify-content: center;
+        gap: 0.6rem;
+    }
+
+    .container > .buttons:first-of-type .btn.btn-secondary:hover {
+        background: var(--gold-dark);
+    }
+
+    .container > .buttons:first-of-type .btn.btn-secondary .btn-text {
+        grid-template-columns: 1fr;
+        opacity: 1;
+        padding-left: 0;
+    }
+
+    .container > .buttons:first-of-type .btn.btn-secondary .btn-text span {
+        font-size: 0.9rem;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+    }
+
+    .container > .buttons:first-of-type .btn.btn-secondary .btn-icon {
+        width: 18px;
+        height: 18px;
+    }
+
+    .container > .buttons:first-of-type .btn.btn-secondary svg {
+        fill: currentColor;
+    }
+
+    .container > .buttons:first-of-type::after {
+        content: "";
+        display: block;
+        height: 1px;
+        background: #2a2a2a;
+        opacity: 0.75;
+        margin: 0.25rem 0 0.25rem;
+    }
+
+    .status-container {
+        flex-direction: column;
+        gap: 0.75rem;
+        padding: 1rem;
+    }
+
+    .status-divider {
+        width: 100%;
+        height: 1px;
+    }
+}

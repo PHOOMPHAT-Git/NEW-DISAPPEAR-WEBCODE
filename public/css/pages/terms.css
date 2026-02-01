@@ -1,0 +1,134 @@
+:root {
+    --gold-primary: #FFD700;
+    --gold-secondary: #DAA520;
+    --gold-dark: #B8860B;
+    --gold-darker: #8B6914;
+    --gold-light: #FFF8DC;
+    --bg-dark: #0d0d0d;
+    --bg-card: #1a1a1a;
+    --text-primary: #ffffff;
+    --text-secondary: #9ca3af;
+    --text-muted: #6b7280;
+    --text-black: #000000;
+
+    --text-warning: #ef4444;
+    --bg-warning: #1f1714;
+    --border-warning: #3d2a1f;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 3rem 2rem;
+    position: relative;
+    z-index: 1;
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: transparent;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    text-decoration: none;
+    margin-bottom: 2.5rem;
+}
+
+.btn-back:hover {
+    background: var(--bg-card);
+}
+
+.btn-back .btn-icon {
+    width: 18px;
+    height: 18px;
+}
+
+.section {
+    margin-bottom: 2.5rem;
+}
+
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+}
+
+.section-content {
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: var(--text-secondary);
+}
+
+.warning-box {
+    margin-top: 1rem;
+    padding: 1rem 1.25rem;
+    background: var(--bg-warning);
+    border: 1px solid var(--border-warning);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+}
+
+.warning-label {
+    color: var(--text-warning);
+    font-weight: 600;
+}
+
+.list {
+    list-style: none;
+    padding: 0;
+    margin-left: 1rem;
+    margin-top: 1rem;
+}
+
+.list li {
+    position: relative;
+    padding-left: 1.25rem;
+    margin-bottom: 0.35rem;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+}
+
+.list li::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: var(--text-muted);
+}

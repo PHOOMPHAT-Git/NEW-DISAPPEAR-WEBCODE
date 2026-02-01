@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Disappear</title>
+    <link rel="stylesheet" href="/css/pages/settings.css">
+    <link rel="stylesheet" href="/css/components/scrollbar.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <main class="container">
+        <a href="#" class="btn-back" id="goBackBtn">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            Go Back
+        </a>
+
+        <div class="error-message" id="errorMessage" role="alert" aria-live="polite"></div>
+        <div class="success-message" id="successMessage" role="status" aria-live="polite"></div>
+
+        <section class="section">
+            <h2 class="section-title">Settings</h2>
+            <p class="section-subtitle">Customize your experience with personalized preferences</p>
+
+            <div class="settings-group">
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <span class="setting-label">Hide Email</span>
+                        <span class="setting-description">Partially hide your email address for privacy</span>
+                    </div>
+                    <div class="setting-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="hideEmailToggle" <%= user.settings && user.settings.hideEmail ? 'checked' : '' %>>
+                            <span class="toggle-slider round"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-danger" id="resetBtn">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                        <path d="M21 3v5h-5"/>
+                        <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                        <path d="M3 21v-5h5"/>
+                    </svg>
+                    Reset All Settings
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const hideTimers = new Map();
+
+        function showMessage(elementId) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            const text = (el.textContent || '').trim();
+            if (!text) return;
+            if (hideTimers.has(elementId)) {
+                clearTimeout(hideTimers.get(elementId));
+                hideTimers.delete(elementId);
+            }
+            el.classList.remove('visible');
+            requestAnimationFrame(() => {
+                el.classList.add('visible');
+            });
+            hideTimers.set(elementId, setTimeout(() => hideMessage(elementId), 5000));
+        }
+
+        function hideMessage(elementId) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            if (hideTimers.has(elementId)) {
+                clearTimeout(hideTimers.get(elementId));
+                hideTimers.delete(elementId);
+            }
+            el.classList.remove('visible');
+        }
+
+        function showErrorMessage(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            if (!errorMessage) return;
+            if (hideTimers.has('errorMessage')) {
+                clearTimeout(hideTimers.get('errorMessage'));
+                hideTimers.delete('errorMessage');
+            }
+            errorMessage.textContent = message;
+            errorMessage.classList.remove('visible');
+            requestAnimationFrame(() => {
+                errorMessage.classList.add('visible');
+            });
+            hideTimers.set('errorMessage', setTimeout(() => hideMessage('errorMessage'), 5000));
+        }
+
+        function showSuccessMessage(message) {
+            const successMessage = document.getElementById('successMessage');
+            if (!successMessage) return;
+            if (hideTimers.has('successMessage')) {
+                clearTimeout(hideTimers.get('successMessage'));
+                hideTimers.delete('successMessage');
+            }
+            successMessage.textContent = message;
+            successMessage.classList.remove('visible');
+            requestAnimationFrame(() => {
+                successMessage.classList.add('visible');
+            });
+            hideTimers.set('successMessage', setTimeout(() => hideMessage('successMessage'), 5000));
+        }
+
+        const hideEmailToggle = document.getElementById('hideEmailToggle');
+        const goBackBtn = document.getElementById('goBackBtn');
+        const resetBtn = document.getElementById('resetBtn');
+
+        let originalSettings = {
+            hideEmail: hideEmailToggle.checked
+        };
+
+        async function saveSettings() {
+            const hideEmail = hideEmailToggle.checked;
+            const hasChanges = hideEmail !== originalSettings.hideEmail;
+
+            if (!hasChanges) {
+                return true;
+            }
+
+            try {
+                const response = await fetch('/settings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ hideEmail })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    originalSettings = { hideEmail };
+                    return true;
+                } else {
+                    showErrorMessage(data.message || 'Failed to save settings');
+                    return false;
+                }
+            } catch (error) {
+                showErrorMessage('An error occurred while saving settings');
+                return false;
+            }
+        }
+
+        goBackBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const saved = await saveSettings();
+            if (saved) {
+                window.location.href = '/account';
+            }
+        });
+
+        resetBtn.addEventListener('click', async () => {
+            if (!confirm('Are you sure you want to reset all settings to default?')) {
+                return;
+            }
+
+            resetBtn.disabled = true;
+            resetBtn.textContent = 'Resetting';
+
+            try {
+                const response = await fetch('/settings/reset', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    hideEmailToggle.checked = true;
+                    originalSettings = { hideEmail: true };
+                    showSuccessMessage(data.message || 'Settings reset successfully');
+                } else {
+                    showErrorMessage(data.message || 'Failed to reset settings');
+                }
+            } catch (error) {
+                showErrorMessage('An error occurred while resetting settings');
+            } finally {
+                resetBtn.innerHTML = '<svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>Reset All Settings';
+                resetBtn.disabled = false;
+            }
+        });
+    </script>
+    <script src="/js/security.js"></script>
+    <script src="/js/turbo-nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Disappear</title>
+    <link rel="stylesheet" href="/css/pages/login.css">
+    <link rel="stylesheet" href="/css/components/scrollbar.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <main class="container">
+        <div class="login-card">
+            <div class="header">
+                <h1>Welcome Back</h1>
+                <p>Sign in to your account to continue.</p>
+            </div>
+
+            <% if (error) { %>
+                <div class="error-message" id="errorMessage" role="alert" aria-live="polite"><%= error %></div>
+            <% } else { %>
+                <div class="error-message" id="errorMessage" role="alert" aria-live="polite"></div>
+            <% } %>
+
+            <% if (success) { %>
+                <div class="success-message" id="successMessage" role="status" aria-live="polite"><%= success %></div>
+            <% } else { %>
+                <div class="success-message" id="successMessage" role="status" aria-live="polite"></div>
+            <% } %>
+
+            <form class="login-form" id="loginForm">
+                <div class="form-group">
+                    <label for="identifier">Username or Email</label>
+                    <input type="text" id="identifier" name="identifier" placeholder="disappear@gamil.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="••••••••" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Sign In</button>
+            </form>
+
+            <div class="divider" id="divider">
+                <span>OR</span>
+            </div>
+
+            <div class="btn-row">
+                <button type="button" class="btn btn-secondary" id="goBackBtn" onclick="window.location.href='/'">Go Back</button>
+                <button type="button" class="btn btn-secondary" id="createAccountBtn" onclick="window.location.href='/register'">Create Account</button>
+            </div>
+
+            <p class="terms" id="terms">
+                By logging in, you agree to our <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a>.
+            </p>
+        </div>
+    </main>
+
+    <script>
+        const hideTimers = new Map();
+
+        function showMessage(elementId) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            const text = (el.textContent || '').trim();
+            if (!text) return;
+            if (hideTimers.has(elementId)) {
+                clearTimeout(hideTimers.get(elementId));
+                hideTimers.delete(elementId);
+            }
+            el.classList.remove('visible');
+            requestAnimationFrame(() => {
+                el.classList.add('visible');
+            });
+            hideTimers.set(elementId, setTimeout(() => hideMessage(elementId), 5000));
+        }
+
+        function hideMessage(elementId) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            if (hideTimers.has(elementId)) {
+                clearTimeout(hideTimers.get(elementId));
+                hideTimers.delete(elementId);
+            }
+            el.classList.remove('visible');
+        }
+
+        function showErrorMessage(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            if (!errorMessage) return;
+            if (hideTimers.has('errorMessage')) {
+                clearTimeout(hideTimers.get('errorMessage'));
+                hideTimers.delete('errorMessage');
+            }
+            errorMessage.textContent = message;
+            errorMessage.classList.remove('visible');
+            requestAnimationFrame(() => {
+                errorMessage.classList.add('visible');
+            });
+            hideTimers.set('errorMessage', setTimeout(() => hideMessage('errorMessage'), 5000));
+        }
+
+        showMessage('errorMessage');
+        showMessage('successMessage');
+
+        document.getElementById('loginForm')?.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const identifier = document.getElementById('identifier')?.value || '';
+            const password = document.getElementById('password')?.value || '';
+            const submitBtn = this.querySelector('button[type="submit"]');
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Signing In';
+
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ identifier, password })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    showErrorMessage(data.error || 'Login failed');
+                    return;
+                }
+
+                if (data.success && data.redirect) {
+                    window.location.href = data.redirect;
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                showErrorMessage('Something went wrong. Please try again.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Sign In';
+            }
+        });
+    </script>
+    <script src="/js/security.js"></script>
+    <script src="/js/turbo-nav.js"></script>
+</body>
+</html>

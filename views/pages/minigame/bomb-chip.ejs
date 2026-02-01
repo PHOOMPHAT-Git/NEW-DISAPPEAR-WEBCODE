@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Disappear</title>
+    <link rel="stylesheet" href="/css/pages/minigame/bomb-chip.css">
+    <link rel="stylesheet" href="/css/components/scrollbar.css">
+    <link rel="stylesheet" href="/css/alert.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <main class="container">
+        <a href="/minigame/games" class="btn-back">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            Go Back
+        </a>
+
+        <section class="section">
+            <h2 class="section-title">Bomb Chip</h2>
+            <p class="section-subtitle">Place bombs on your board, attack opponent's board</p>
+
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <span class="stat-label">Total Games</span>
+                    <span class="stat-value" id="totalGames"><%= stats.totalGames || 0 %></span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Wins</span>
+                    <span class="stat-value" id="totalWins"><%= stats.wins || 0 %></span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Losses</span>
+                    <span class="stat-value" id="totalLosses"><%= stats.losses || 0 %></span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Win Rate</span>
+                    <span class="stat-value" id="winRate"><%= stats.totalGames > 0 ? Math.round((stats.wins || 0) / stats.totalGames * 100) : 0 %>%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Current Streak</span>
+                    <span class="stat-value" id="currentStreak"><%= stats.currentStreak || 0 %></span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Best Streak</span>
+                    <span class="stat-value" id="bestStreak"><%= stats.bestStreak || 0 %></span>
+                </div>
+            </div>
+
+            <div id="lobbyPanel" class="panel">
+                <div class="lobby-tabs">
+                    <button class="lobby-tab active" data-tab="create">Create Room</button>
+                    <button class="lobby-tab" data-tab="join">Join Room</button>
+                </div>
+
+                <div id="createTab" class="lobby-tab-content active">
+                    <div class="form-group">
+                        <label class="form-label">Grid Size</label>
+                        <div class="button-group">
+                            <button class="size-btn active" data-size="3">3x3</button>
+                            <button class="size-btn" data-size="4">4x4</button>
+                            <button class="size-btn" data-size="5">5x5</button>
+                            <button class="size-btn" data-size="6">6x6</button>
+                        </div>
+                    </div>
+                    <p class="form-hint">Bomb count = Grid size ( 3x3 = 3 bombs, 4x4 = 4 bombs, etc. )</p>
+
+                    <div class="form-group">
+                        <label class="form-label">Number of Players</label>
+                        <div class="button-group">
+                            <button class="players-btn active" data-players="2">2 Players</button>
+                            <button class="players-btn" data-players="3">3 Players</button>
+                            <button class="players-btn" data-players="4">4 Players</button>
+                        </div>
+                    </div>
+                    <p class="form-hint">Last player standing wins!</p>
+
+                    <button id="createRoomBtn" class="btn-primary">Create Room</button>
+                </div>
+
+                <div id="joinTab" class="lobby-tab-content">
+                    <div id="invitedRoomsSection" class="invited-rooms-section hidden">
+                        <h3 class="invited-rooms-title">Pending Invites</h3>
+                        <div id="invitedRoomsList" class="invited-rooms-list"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Room Code</label>
+                        <input type="text" id="roomCodeInput" class="text-input" placeholder="Enter 6-digit code" maxlength="6">
+                    </div>
+                    <button id="joinRoomBtn" class="btn-primary">Join Room</button>
+                </div>
+            </div>
+
+            <div id="waitingPanel" class="panel hidden">
+                <div class="room-info">
+                    <div class="room-code-display">
+                        <span class="room-code-label">Room Code</span>
+                        <span class="room-code" id="displayRoomCode">------</span>
+                        <button class="btn-copy" id="copyCodeBtn" title="Copy code">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <button class="btn-secondary" id="shareInviteBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+                            <polyline points="16 6 12 2 8 6"/>
+                            <line x1="12" y1="2" x2="12" y2="15"/>
+                        </svg>
+                        Share Invite Link
+                    </button>
+                </div>
+
+                <div class="players-section">
+                    <h3 class="players-title">Players ( <span id="playerCount">1</span> / <span id="maxPlayerCount">2</span> )</h3>
+                    <div id="playersList" class="players-list"></div>
+                </div>
+
+                <% if (user.friends && user.friends.length > 0) { %>
+                <div class="invite-section">
+                    <h3 class="invite-title">Invite Friends</h3>
+                    <div class="friends-invite-list">
+                        <% user.friends.forEach(function(friend) { %>
+                        <div class="invite-friend-item" data-user-id="<%= friend._id %>">
+                            <span class="friend-name"><%= friend.username %></span>
+                            <button class="btn-invite" onclick="inviteFriend('<%= friend._id %>')">Invite</button>
+                        </div>
+                        <% }); %>
+                    </div>
+                </div>
+                <% } %>
+
+                <div class="waiting-actions">
+                    <button id="startGameBtn" class="btn-primary hidden">Start Game</button>
+                    <button id="leaveRoomBtn" class="btn-secondary btn-danger">Leave Room</button>
+                </div>
+            </div>
+
+            <div id="placingPanel" class="panel hidden">
+                <div class="placing-header">
+                    <h3 class="placing-title">Place Your Bombs</h3>
+                    <div class="placing-status">
+                        <span>Bombs : <strong id="bombsPlacedCount">0</strong> / <strong id="bombsRequiredCount">4</strong></span>
+                    </div>
+                </div>
+
+                <div class="placing-instructions">
+                    <p>Click cells to place bombs on your board.</p>
+                    <p class="warning-text">If opponent finds ALL your bombs, you LOSE!</p>
+                </div>
+
+                <div class="placing-players" id="placingPlayers"></div>
+
+                <div class="placing-grid-container">
+                    <div id="placementGrid" class="game-grid grid-4x4"></div>
+                </div>
+
+                <div class="placing-actions">
+                    <button id="readyBtn" class="btn-primary hidden">Ready</button>
+                    <p id="readyStatus" class="ready-status"></p>
+                </div>
+            </div>
+
+            <div id="gamePanel" class="panel hidden">
+                <div class="game-header">
+                    <div class="turn-indicator">
+                        <span class="turn-label">Current Turn :</span>
+                        <span class="turn-player" id="currentTurnPlayer">-</span>
+                    </div>
+                </div>
+
+                <div class="game-players" id="gamePlayers"></div>
+
+                <div class="battle-boards">
+                    <div class="board-section my-board-section">
+                        <h4 class="board-label">Your Board</h4>
+                        <p class="board-hint">Your bombs are shown</p>
+                        <div class="game-grid-container">
+                            <div id="myGrid" class="game-grid grid-4x4"></div>
+                        </div>
+                    </div>
+
+                    <div class="opponent-boards-container" id="opponentBoardsContainer">
+                    </div>
+                </div>
+
+                <div class="bomb-tracker">
+                    <span>Bombs found : <strong id="bombsFoundCount">0</strong> / <strong id="bombsTotalCount">4</strong></span>
+                </div>
+            </div>
+
+            <div id="gameOverPanel" class="panel hidden">
+                <div class="game-over-content">
+                    <h2 class="game-over-title">Game Over</h2>
+                    <div class="result-display">
+                        <div class="winner-display">
+                            <span class="result-label">Winner</span>
+                            <span class="winner-name" id="winnerName">-</span>
+                        </div>
+                    </div>
+                    <p class="game-over-reason" id="gameOverReason"></p>
+                    <div class="game-over-actions">
+                        <button id="playAgainBtn" class="btn-primary">Play Again</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="/js/alert.js"></script>
+    <script>
+        window.CURRENT_USER = {
+            id: '<%= user._id %>',
+            username: '<%= user.username %>',
+            email: '<%= user.email %>'
+        };
+        <% if (inviteToken) { %>
+        window.INVITE_TOKEN = '<%= inviteToken %>';
+        <% } %>
+    </script>
+    <script src="/js/minigame/bomb-chip.js"></script>
+    <script src="/js/security.js"></script>
+</body>
+</html>
