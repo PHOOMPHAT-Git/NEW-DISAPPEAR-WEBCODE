@@ -34,7 +34,7 @@ const robloxOAuthStateSchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
         index: true,
-        expires: 900 // Auto-delete after 15 minutes
+        expires: 900
     },
     verified_at: {
         type: Date,
