@@ -222,7 +222,7 @@ body {
 }
 
 .status-card {
-    background: var(--bg-dark);
+    background: transparent;
     border: 1px solid #2a2a2a;
     border-radius: 12px;
     padding: 1.25rem;

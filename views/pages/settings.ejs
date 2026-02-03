@@ -12,12 +12,12 @@
 </head>
 <body>
     <main class="container">
-        <a href="#" class="btn-back" id="goBackBtn">
+        <button type="button" class="btn-back" id="goBackBtn">
             <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M19 12H5M12 19l-7-7 7-7"/>
             </svg>
             Go Back
-        </a>
+        </button>
 
         <div class="error-message" id="errorMessage" role="alert" aria-live="polite"></div>
         <div class="success-message" id="successMessage" role="status" aria-live="polite"></div>
@@ -154,8 +154,7 @@
             }
         }
 
-        goBackBtn.addEventListener('click', async (e) => {
-            e.preventDefault();
+        goBackBtn.addEventListener('click', async () => {
             const saved = await saveSettings();
             if (saved) {
                 window.location.href = '/account';
