@@ -1,7 +1,5 @@
 require('dotenv').config();
 const express = require('express');
-const http = require('http');
-const { Server } = require('socket.io');
 const session = require('express-session');
 const MongoStore = require('connect-mongo');
 const path = require('path');
@@ -17,15 +15,11 @@ const logoutRouter = require('./src/routes/logout');
 const accountRouter = require('./src/routes/account');
 const settingsRouter = require('./src/routes/settings');
 const friendsRouter = require('./src/routes/friends');
-const minigameRouter = require('./src/routes/minigame');
 const robloxVerifyRouter = require('./src/routes/roblox-verify');
 const statusRouter = require('./src/routes/status');
-
-const bombChipSocket = require('./src/sockets/bomb-chip');
+const ticketRouter = require('./src/routes/ticket');
 
 const app = express();
-const server = http.createServer(app);
-const io = new Server(server);
 const PORT = process.env.PORT || 3000;
 
 connectDB();
@@ -68,8 +62,6 @@ const sessionMiddleware = session({
 
 app.use(sessionMiddleware);
 
-bombChipSocket(io, sessionMiddleware);
-
 app.use('/', indexRouter);
 app.use('/about', aboutRouter);
 app.use('/terms', termsRouter);
@@ -80,9 +72,9 @@ app.use('/logout', logoutRouter);
 app.use('/account', accountRouter);
 app.use('/settings', settingsRouter);
 app.use('/friends', friendsRouter);
-app.use('/minigame', minigameRouter);
 app.use('/roblox', robloxVerifyRouter);
 app.use('/api/status', statusRouter);
+app.use('/ticket', ticketRouter);
 
 app.use((req, res) => {
     res.status(404).render('error', {
@@ -101,7 +93,7 @@ app.use((err, req, res, next) => {
     });
 });
 
-server.listen(PORT, () => {
+app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
 });
 

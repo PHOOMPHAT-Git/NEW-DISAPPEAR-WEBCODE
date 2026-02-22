@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Disappear</title>
+    <link rel="stylesheet" href="/css/pages/ticket.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <main class="container">
+        <a href="/" class="btn-back">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            Go Back
+        </a>
+
+        <div class="ticket-scene">
+            <div class="ticket-3d-root">
+                <div class="ticket-transform" id="ticketTransform">
+                    <div class="ticket-size">
+
+                        <!-- Shadow layer 1 -->
+                        <div class="ticket-shadow ticket-shadow-1">
+                            <div class="ticket-shadow-shape" style="background: rgba(0,0,0,0.85);"></div>
+                        </div>
+
+                        <!-- Shadow layer 2 -->
+                        <div class="ticket-shadow ticket-shadow-2">
+                            <div class="ticket-shadow-shape" style="background: rgba(0,0,0,0.65);"></div>
+                        </div>
+
+                        <!-- Main ticket face -->
+                        <div class="ticket-face">
+
+                            <!-- SVG draws the ticket background, inner fill, and border -->
+                            <svg class="ticket-svg" viewBox="0 0 550 300" preserveAspectRatio="none">
+                                <!-- Outer perforated ticket shape -->
+                                <path d="M 0 30 A 30 30 0 0 0 30 0 L 520 0 A 30 30 0 0 0 550 30 L 550 39 C 542 39 542 49 550 49 L 550 58 C 542 58 542 68 550 68 L 550 77 C 542 77 542 87 550 87 L 550 97 C 542 97 542 107 550 107 L 550 116 C 542 116 542 126 550 126 L 550 135 C 542 135 542 145 550 145 L 550 155 C 542 155 542 165 550 165 L 550 174 C 542 174 542 184 550 184 L 550 193 C 542 193 542 203 550 203 L 550 212 C 542 212 542 222 550 222 L 550 232 C 542 232 542 242 550 242 L 550 251 C 542 251 542 261 550 261 L 550 270 A 30 30 0 0 0 520 300 L 30 300 A 30 30 0 0 0 0 270 L 0 261 C 8 261 8 251 0 251 L 0 242 C 8 242 8 232 0 232 L 0 222 C 8 222 8 212 0 212 L 0 203 C 8 203 8 193 0 193 L 0 184 C 8 184 8 174 0 174 L 0 165 C 8 165 8 155 0 155 L 0 145 C 8 145 8 135 0 135 L 0 126 C 8 126 8 116 0 116 L 0 107 C 8 107 8 97 0 97 L 0 87 C 8 87 8 77 0 77 L 0 68 C 8 68 8 58 0 58 L 0 49 C 8 49 8 39 0 39 L 0 30 Z"
+                                      fill="#F5F0E0" stroke="#E5E0D0" stroke-width="1"/>
+
+                                <!-- Inner fill -->
+                                <path d="M 18 44.5 A 48 48 0 0 0 44.5 18 L 505.5 18 A 48 48 0 0 0 532 44.5 L 532 255.5 A 48 48 0 0 0 505.5 282 L 44.5 282 A 48 48 0 0 0 18 255.5 Z"
+                                      fill="#FAF6E8" stroke="none"/>
+
+                                <!-- Inner gold border -->
+                                <path d="M 18 44.5 A 48 48 0 0 0 44.5 18 L 505.5 18 A 48 48 0 0 0 532 44.5 L 532 255.5 A 48 48 0 0 0 505.5 282 L 44.5 282 A 48 48 0 0 0 18 255.5 Z"
+                                      fill="none" stroke="rgba(184, 134, 11, 0.35)" stroke-width="1.5"/>
+                            </svg>
+
+                            <!-- Left side vertical text -->
+                            <div class="ticket-side ticket-side-left">
+                                <span class="ticket-side-label">DISAPPEAR</span>
+                                <!-- 
+                                <span class="ticket-side-dot">-</span>
+                                <span class="ticket-side-num">0000001</span>
+                                -->
+                            </div>
+
+                            <!-- Right side vertical text -->
+                            <div class="ticket-side ticket-side-right">
+                                <span class="ticket-side-label">DISAPPEAR</span>
+                                <!-- 
+                                <span class="ticket-side-dot">-</span>
+                                <span class="ticket-side-num">0000001</span>
+                                -->
+                            </div>
+
+                            <!-- Bottom strip (rotated) -->
+                            <div class="ticket-strip ticket-strip-bottom">
+                                <span class="ticket-strip-text">Congratulations</span>
+                            </div>
+
+                            <!-- Center content -->
+                            <div class="ticket-center">
+                                <span class="ticket-title">Disappear</span>
+                                <span class="ticket-subtitle">Xuvrathix</span>
+                            </div>
+
+                            <!-- Mouse-follow highlight -->
+                            <div class="ticket-highlight" id="ticketHighlight"></div>
+
+                        </div><!-- /ticket-face -->
+
+                        <!-- Ticket back face -->
+                        <div class="ticket-back">
+
+                            <svg class="ticket-svg" viewBox="0 0 550 300" preserveAspectRatio="none">
+                                <path d="M 0 30 A 30 30 0 0 0 30 0 L 520 0 A 30 30 0 0 0 550 30 L 550 39 C 542 39 542 49 550 49 L 550 58 C 542 58 542 68 550 68 L 550 77 C 542 77 542 87 550 87 L 550 97 C 542 97 542 107 550 107 L 550 116 C 542 116 542 126 550 126 L 550 135 C 542 135 542 145 550 145 L 550 155 C 542 155 542 165 550 165 L 550 174 C 542 174 542 184 550 184 L 550 193 C 542 193 542 203 550 203 L 550 212 C 542 212 542 222 550 222 L 550 232 C 542 232 542 242 550 242 L 550 251 C 542 251 542 261 550 261 L 550 270 A 30 30 0 0 0 520 300 L 30 300 A 30 30 0 0 0 0 270 L 0 261 C 8 261 8 251 0 251 L 0 242 C 8 242 8 232 0 232 L 0 222 C 8 222 8 212 0 212 L 0 203 C 8 203 8 193 0 193 L 0 184 C 8 184 8 174 0 174 L 0 165 C 8 165 8 155 0 155 L 0 145 C 8 145 8 135 0 135 L 0 126 C 8 126 8 116 0 116 L 0 107 C 8 107 8 97 0 97 L 0 87 C 8 87 8 77 0 77 L 0 68 C 8 68 8 58 0 58 L 0 49 C 8 49 8 39 0 39 L 0 30 Z"
+                                      fill="#F5F0E0" stroke="#E5E0D0" stroke-width="1"/>
+                                <path d="M 18 44.5 A 48 48 0 0 0 44.5 18 L 505.5 18 A 48 48 0 0 0 532 44.5 L 532 255.5 A 48 48 0 0 0 505.5 282 L 44.5 282 A 48 48 0 0 0 18 255.5 Z"
+                                      fill="#FAF6E8" stroke="none"/>
+                                <path d="M 18 44.5 A 48 48 0 0 0 44.5 18 L 505.5 18 A 48 48 0 0 0 532 44.5 L 532 255.5 A 48 48 0 0 0 505.5 282 L 44.5 282 A 48 48 0 0 0 18 255.5 Z"
+                                      fill="none" stroke="rgba(184, 134, 11, 0.35)" stroke-width="1.5"/>
+                            </svg>
+
+                            <div class="ticket-side ticket-side-left">
+                                <span class="ticket-side-label">DISAPPEAR</span>
+                            </div>
+                            <div class="ticket-side ticket-side-right">
+                                <span class="ticket-side-label">DISAPPEAR</span>
+                            </div>
+
+                            <div class="ticket-strip ticket-strip-bottom">
+                                <span class="ticket-strip-text">Congratulations</span>
+                            </div>
+
+                            <div class="ticket-back-content">
+                                <div class="ticket-back-row">
+                                    <span class="ticket-back-label">TITLE</span>
+                                    <span class="ticket-back-value ticket-back-title-val">Disappear</span>
+                                </div>
+                                <div class="ticket-back-sep"></div>
+                                <div class="ticket-back-row">
+                                    <span class="ticket-back-label">DESCRIPTION</span>
+                                    <span class="ticket-back-value">An immersive online experience where nothing is quite what it seems.</span>
+                                </div>
+                                <div class="ticket-back-sep"></div>
+                                <div class="ticket-back-row">
+                                    <span class="ticket-back-label">REWARD</span>
+                                    <span class="ticket-back-value">1,000 THB</span>
+                                </div>
+                            </div>
+
+                        </div><!-- /ticket-back -->
+
+                    </div><!-- /ticket-size -->
+                </div><!-- /ticket-transform -->
+            </div>
+        </div>
+    </main>
+
+    <script>
+    (function() {
+        if (window._ticketCtrl) window._ticketCtrl.abort();
+        window._ticketCtrl = new AbortController();
+        const sig = window._ticketCtrl.signal;
+
+        const wrap = document.getElementById('ticketTransform');
+        const highlight = document.getElementById('ticketHighlight');
+        const ticketSize = wrap.querySelector('.ticket-size');
+
+        let accumRotX = 0, accumRotY = 0;
+        let swipeStartX = 0, swipeStartY = 0, swiping = false;
+        const SWIPE_MIN = 50;
+        const AXIS_THRESH = 0.3;
+
+        wrap.addEventListener('pointerdown', (e) => {
+            swipeStartX = e.clientX;
+            swipeStartY = e.clientY;
+            swiping = true;
+            wrap.setPointerCapture(e.pointerId);
+        });
+
+        wrap.addEventListener('pointerup', (e) => {
+            if (!swiping) return;
+            swiping = false;
+            const dx = e.clientX - swipeStartX;
+            const dy = e.clientY - swipeStartY;
+            const len = Math.sqrt(dx * dx + dy * dy);
+            if (len < SWIPE_MIN) return;
+            const nx = dx / len;
+            const ny = dy / len;
+            if (Math.abs(nx) >= Math.abs(ny)) {
+                accumRotY += Math.sign(nx) * 180;
+            } else {
+                accumRotX += Math.sign(-ny) * 180;
+            }
+            ticketSize.style.transform = `rotateX(${accumRotX}deg) rotateY(${accumRotY}deg)`;
+        });
+
+        wrap.addEventListener('pointercancel', () => { swiping = false; });
+
+        let targetRotX = 0, targetRotY = 0;
+        let currentRotX = 0, currentRotY = 0;
+        let targetX = 50, targetY = 50;
+        let currentX = 50, currentY = 50;
+        let targetOp = 0, currentOp = 0;
+        let rafId = null;
+
+        const LERP_IN  = 0.1;
+        const LERP_OUT = 0.035;
+        const MARGIN = 14;
+        let isHovering = false;
+
+        function lerp(a, b, t) { return a + (b - a) * t; }
+
+        function tick() {
+            currentRotX = lerp(currentRotX, targetRotX, LERP_OUT);
+            currentRotY = lerp(currentRotY, targetRotY, LERP_OUT);
+            currentX    = lerp(currentX,    targetX,    LERP_IN);
+            currentY    = lerp(currentY,    targetY,    LERP_IN);
+            currentOp   = lerp(currentOp,   targetOp,   LERP_OUT);
+
+            wrap.style.transform = `rotateX(${currentRotX.toFixed(3)}deg) rotateY(${currentRotY.toFixed(3)}deg)`;
+
+            // Always update so gradient position is correct on both fade-in and fade-out
+            highlight.style.background = `radial-gradient(
+                ellipse 80% 60% at ${currentX.toFixed(2)}% ${currentY.toFixed(2)}%,
+                rgba(255,255,255,0.14) 0%,
+                rgba(255,255,255,0.05) 40%,
+                transparent 70%
+            )`;
+            highlight.style.opacity = currentOp.toFixed(4);
+
+            const stillMoving =
+                Math.abs(currentRotX - targetRotX) > 0.005 ||
+                Math.abs(currentRotY - targetRotY) > 0.005 ||
+                Math.abs(currentX - targetX) > 0.05 ||
+                Math.abs(currentY - targetY) > 0.05 ||
+                Math.abs(currentOp - targetOp) > 0.005;
+
+            rafId = stillMoving ? requestAnimationFrame(tick) : null;
+        }
+
+        function startTick() {
+            if (!rafId) rafId = requestAnimationFrame(tick);
+        }
+
+        document.addEventListener('mousemove', (e) => {
+            const rect = wrap.getBoundingClientRect();
+
+            const inside =
+                e.clientX >= rect.left   - MARGIN &&
+                e.clientX <= rect.right  + MARGIN &&
+                e.clientY >= rect.top    - MARGIN &&
+                e.clientY <= rect.bottom + MARGIN;
+
+            if (inside) {
+                isHovering = true;
+                const cx = rect.left + rect.width  / 2;
+                const cy = rect.top  + rect.height / 2;
+                const dx = Math.max(-1, Math.min(1, (e.clientX - cx) / (rect.width  / 2)));
+                const dy = Math.max(-1, Math.min(1, (e.clientY - cy) / (rect.height / 2)));
+
+                targetRotX = -dy * 10;
+                targetRotY = -dx * 12;
+                targetX = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width)  * 100));
+                targetY = Math.max(0, Math.min(100, ((e.clientY - rect.top)  / rect.height) * 100));
+                targetOp = 1;
+            } else {
+                isHovering = false;
+                targetRotX = 0;
+                targetRotY = 0;
+                targetOp = 0;
+            }
+
+            startTick();
+        }, { signal: sig });
+    })();
+    </script>
+
+    <script src="/js/security.js"></script>
+    <script src="/js/turbo-nav.js"></script>
+</body>
+</html>

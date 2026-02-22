@@ -72,7 +72,7 @@
             if (prefetchedUrls.has(urlObj.pathname)) return false;
 
             // Skip certain paths
-            const skipPaths = ['/logout', '/api/', '/socket.io/', '/minigame/bomb-chip'];
+            const skipPaths = ['/logout', '/api/', '/socket.io/'];
             if (skipPaths.some(p => urlObj.pathname.startsWith(p))) return false;
 
             return true;
@@ -313,7 +313,7 @@
             if (urlObj.origin !== window.location.origin) return;
 
             // Skip certain paths (including WebSocket-heavy pages)
-            const skipPaths = ['/logout', '/api/', '/socket.io/', '/minigame/bomb-chip'];
+            const skipPaths = ['/logout', '/api/', '/socket.io/'];
             if (skipPaths.some(p => urlObj.pathname.startsWith(p))) return;
 
             // Skip if data-turbo="false"
@@ -352,7 +352,7 @@
             if (urlObj.origin !== window.location.origin) return;
 
             // Skip certain paths (including WebSocket-heavy pages)
-            const skipPaths = ['/logout', '/api/', '/socket.io/', '/minigame/bomb-chip'];
+            const skipPaths = ['/logout', '/api/', '/socket.io/'];
             if (skipPaths.some(p => urlObj.pathname.startsWith(p))) return;
 
             e.preventDefault();
