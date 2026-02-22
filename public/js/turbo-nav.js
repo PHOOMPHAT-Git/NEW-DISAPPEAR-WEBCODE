@@ -14,6 +14,7 @@
     // Add styles
     const style = document.createElement('style');
     style.textContent = `
+        html { background-color: #0d0d0d; }
         #turbo-loading-bar {
             position: fixed;
             top: 0;
@@ -44,20 +45,20 @@
         }
         .turbo-fade-out {
             opacity: 0 !important;
-            transition: opacity 0.4s ease !important;
+            transition: opacity 0.2s ease !important;
         }
         .turbo-fade-in {
-            animation: turbo-fade-in 0.4s ease;
+            animation: turbo-fade-in 0.2s ease;
         }
         @keyframes turbo-fade-in {
             from { opacity: 0; }
             to { opacity: 1; }
         }
         ::view-transition-old(root) {
-            animation: 0.4s ease both turbo-vt-out;
+            animation: 0.2s ease both turbo-vt-out;
         }
         ::view-transition-new(root) {
-            animation: 0.4s ease both turbo-vt-in;
+            animation: 0.2s ease both turbo-vt-in;
         }
         @keyframes turbo-vt-out {
             to { opacity: 0; }
@@ -211,16 +212,19 @@
         // Update title
         document.title = newDoc.title;
 
-        // Update head (stylesheets and meta) FIRST and wait for CSS to load
-        await updateHead(newDoc.head);
+        // 1) Add new stylesheets and wait for them to load (keep old ones for now)
+        const removeOldStylesheets = await addNewStylesheets(newDoc.head);
 
-        // Replace body content
+        // 2) Replace body content (old CSS still active, no flash)
         document.body.innerHTML = newDoc.body.innerHTML;
 
         // Copy body attributes
         Array.from(newDoc.body.attributes).forEach(attr => {
             document.body.setAttribute(attr.name, attr.value);
         });
+
+        // 3) Now remove old page-specific stylesheets (new body + new CSS are both ready)
+        removeOldStylesheets();
 
         // Update URL
         history.pushState({}, '', url);
@@ -236,7 +240,8 @@
         window.dispatchEvent(new CustomEvent('turbo:load'));
     }
 
-    async function updateHead(newHead) {
+    // Returns a cleanup fn that removes old page-specific stylesheets when called
+    async function addNewStylesheets(newHead) {
         const newStyleHrefs = Array.from(newHead.querySelectorAll('link[rel="stylesheet"]'))
             .map(l => l.href);
 
@@ -249,7 +254,7 @@
         const currentLinks = Array.from(document.head.querySelectorAll('link[rel="stylesheet"]'));
         const currentHrefs = new Set(currentLinks.map(l => l.href));
 
-        // 1) Add missing new stylesheets FIRST
+        // Add missing new stylesheets and wait for them to load
         const loadPromises = [];
         for (const href of newStyleHrefs) {
             if (currentHrefs.has(href)) continue;
@@ -273,13 +278,15 @@
             await Promise.all(loadPromises);
         }
 
-        // 2) THEN remove old page-specific stylesheets not in the new page
+        // Return cleanup fn — caller decides when to remove old stylesheets
         const newSet = new Set(newStyleHrefs);
-        for (const link of currentLinks) {
-            const href = link.href;
-            if (isCommonStylesheet(href)) continue;
-            if (!newSet.has(href)) link.remove();
-        }
+        return function removeOld() {
+            for (const link of currentLinks) {
+                const href = link.href;
+                if (isCommonStylesheet(href)) continue;
+                if (!newSet.has(href)) link.remove();
+            }
+        };
     }
 
     function executeScripts(container) {
