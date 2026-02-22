@@ -11,6 +11,11 @@
     loadingBar.innerHTML = '<div class="turbo-loading-progress"></div>';
     document.body.appendChild(loadingBar);
 
+    // Create black fade overlay (darkness swallow effect)
+    const fadeOverlay = document.createElement('div');
+    fadeOverlay.id = 'turbo-fade-overlay';
+    document.body.appendChild(fadeOverlay);
+
     // Add styles
     const style = document.createElement('style');
     style.textContent = `
@@ -43,28 +48,18 @@
             50% { width: 70%; }
             100% { width: 90%; }
         }
-        .turbo-fade-out {
-            opacity: 0 !important;
-            transition: opacity 0.2s ease !important;
+        #turbo-fade-overlay {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 999998;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.45s ease-out;
         }
-        .turbo-fade-in {
-            animation: turbo-fade-in 0.2s ease;
-        }
-        @keyframes turbo-fade-in {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        ::view-transition-old(root) {
-            animation: 0.2s ease both turbo-vt-out;
-        }
-        ::view-transition-new(root) {
-            animation: 0.2s ease both turbo-vt-in;
-        }
-        @keyframes turbo-vt-out {
-            to { opacity: 0; }
-        }
-        @keyframes turbo-vt-in {
-            from { opacity: 0; }
+        #turbo-fade-overlay.darkening {
+            opacity: 1;
+            transition: opacity 0.5s ease-in;
         }
     `;
     document.head.appendChild(style);
@@ -183,23 +178,18 @@
     }
 
     function performNavigation(url, html) {
-        // Use View Transitions API if available
-        if (document.startViewTransition) {
-            document.startViewTransition(() => {
-                replaceDocument(url, html);
-            });
-        } else {
-            // Fallback: fade transition
-            document.body.classList.add('turbo-fade-out');
+        // Start darkness swallowing in
+        fadeOverlay.classList.remove('darkening');
+        void fadeOverlay.offsetWidth; // force reflow so transition fires fresh
+        fadeOverlay.classList.add('darkening');
+
+        setTimeout(async () => {
+            await replaceDocument(url, html);
+            // Brief pause at full black before revealing new page
             setTimeout(() => {
-                replaceDocument(url, html);
-                document.body.classList.remove('turbo-fade-out');
-                document.body.classList.add('turbo-fade-in');
-                setTimeout(() => {
-                    document.body.classList.remove('turbo-fade-in');
-                }, 400);
-            }, 400);
-        }
+                fadeOverlay.classList.remove('darkening');
+            }, 60);
+        }, 500);
 
         hideLoading();
     }
@@ -217,6 +207,10 @@
 
         // 2) Replace body content (old CSS still active, no flash)
         document.body.innerHTML = newDoc.body.innerHTML;
+
+        // Re-append turbo UI elements removed by innerHTML replacement
+        document.body.appendChild(loadingBar);
+        document.body.appendChild(fadeOverlay);
 
         // Copy body attributes
         Array.from(newDoc.body.attributes).forEach(attr => {
