@@ -44,14 +44,26 @@
         }
         .turbo-fade-out {
             opacity: 0 !important;
-            transition: opacity 0.15s ease !important;
+            transition: opacity 0.4s ease !important;
         }
         .turbo-fade-in {
-            animation: turbo-fade-in 0.15s ease;
+            animation: turbo-fade-in 0.4s ease;
         }
         @keyframes turbo-fade-in {
             from { opacity: 0; }
             to { opacity: 1; }
+        }
+        ::view-transition-old(root) {
+            animation: 0.4s ease both turbo-vt-out;
+        }
+        ::view-transition-new(root) {
+            animation: 0.4s ease both turbo-vt-in;
+        }
+        @keyframes turbo-vt-out {
+            to { opacity: 0; }
+        }
+        @keyframes turbo-vt-in {
+            from { opacity: 0; }
         }
     `;
     document.head.appendChild(style);
@@ -184,8 +196,8 @@
                 document.body.classList.add('turbo-fade-in');
                 setTimeout(() => {
                     document.body.classList.remove('turbo-fade-in');
-                }, 150);
-            }, 150);
+                }, 400);
+            }, 400);
         }
 
         hideLoading();

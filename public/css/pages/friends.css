@@ -57,7 +57,7 @@ body {
     align-items: center;
     gap: 0.5rem;
     padding: 0.75rem 1.25rem;
-    background: transparent;
+    background: var(--bg-card);
     border: 1px solid var(--divider);
     border-radius: 8px;
     color: var(--text-primary);
@@ -70,7 +70,7 @@ body {
 }
 
 .btn-back:hover {
-    background: var(--bg-card);
+    background: var(--bg-warning);
 }
 
 .btn-back .btn-icon {
@@ -103,7 +103,7 @@ body {
 
 .tab-btn {
     padding: 0.75rem 1.5rem;
-    background: transparent;
+    background: var(--bg-card);
     border: 1px solid var(--divider);
     border-radius: 8px;
     color: var(--text-secondary);
@@ -115,7 +115,7 @@ body {
 }
 
 .tab-btn:hover {
-    background: var(--bg-card);
+    background: var(--bg-warning);
     color: var(--text-primary);
 }
 
@@ -138,7 +138,7 @@ body {
     align-items: center;
     justify-content: space-between;
     padding: 1rem 1.25rem;
-    background: transparent;
+    background: var(--bg-card);
     border: 1px solid var(--divider);
     border-radius: 8px;
     margin-bottom: 0.75rem;
@@ -188,7 +188,7 @@ body {
 }
 
 .btn-accept:hover {
-    background: var(--bg-card);
+    background: var(--bg-warning);
 }
 
 .btn-remove {

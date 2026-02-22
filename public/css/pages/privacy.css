@@ -56,7 +56,7 @@ body {
     align-items: center;
     gap: 0.5rem;
     padding: 0.75rem 1.25rem;
-    background: transparent;
+    background: var(--bg-card);
     border: 1px solid #2a2a2a;
     border-radius: 8px;
     color: var(--text-primary);
@@ -69,7 +69,7 @@ body {
 }
 
 .btn-back:hover {
-    background: var(--bg-card);
+    background: var(--bg-warning);
 }
 
 .btn-back .btn-icon {

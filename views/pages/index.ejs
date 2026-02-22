@@ -5,15 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Disappear</title>
     <link rel="stylesheet" href="/css/pages/index.css">
+    <link rel="stylesheet" href="/css/components/aurora.css">
     <link rel="stylesheet" href="/css/components/scrollbar.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
 </head>
 <body>
+    <div class="aurora-bg theme-index">
+        <div class="aurora aurora-1"></div>
+        <div class="aurora aurora-2"></div>
+        <div class="aurora aurora-3"></div>
+        <div class="aurora aurora-4"></div>
+    </div>
+
     <main class="container">
         <div class="logo-wrapper">
-            <span class="logo-text">Disappear</span>
+            <span class="logo-text" id="logo-text"><span class="logo-letter" style="--i:0">D</span><span class="logo-letter" style="--i:1">i</span><span class="logo-letter" style="--i:2">s</span><span class="logo-letter" style="--i:3">a</span><span class="logo-letter" style="--i:4">p</span><span class="logo-letter" style="--i:5">p</span><span class="logo-letter" style="--i:6">e</span><span class="logo-letter" style="--i:7">a</span><span class="logo-letter" style="--i:8">r</span></span>
         </div>
 
         <div class="buttons">
@@ -62,9 +70,7 @@
             </button>
         </div>
 
-        <% if (user) { %>
-            <p class="data-line">Welcome back, <%= user.username %>!</p>
-        <% } else { %>
+        <% if (!user) { %>
             <p class="disclaimer">You are not logged in yet.</p>
         <% } %>
     </main>
@@ -72,5 +78,6 @@
     <script src="/js/security.js"></script>
     <script src="/js/turbo-nav.js"></script>
     <script src="/js/status.js"></script>
+    <script src="/js/index.js"></script>
 </body>
 </html>

@@ -57,7 +57,7 @@ body {
     align-items: center;
     gap: 0.5rem;
     padding: 0.75rem 1.25rem;
-    background: transparent;
+    background: var(--bg-card);
     border: 1px solid var(--divider);
     border-radius: 8px;
     color: var(--text-primary);
@@ -70,7 +70,7 @@ body {
 }
 
 .btn-back:hover {
-    background: var(--bg-card);
+    background: var(--bg-warning);
 }
 
 .btn-back .btn-icon {
@@ -98,7 +98,7 @@ body {
 .info-group {
     display: flex;
     flex-direction: column;
-    background: color-mix(in srgb, var(--bg-card) 1%, transparent);
+    background: var(--bg-card);
     padding: 1.5rem;
     border-radius: 8px;
     border: 1px solid var(--divider);
@@ -202,7 +202,7 @@ body {
 }
 
 .btn-secondary:hover {
-    background: var(--bg-card);
+    background: var(--bg-warning);
 }
 
 .friend-input-wrapper {

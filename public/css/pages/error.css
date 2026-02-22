@@ -126,6 +126,7 @@ body {
 .btn-primary {
     background: var(--gold-secondary);
     color: var(--text-black);
+    border: 1px solid var(--gold-dark, #9e760f);
 }
 
 .btn-primary:hover {

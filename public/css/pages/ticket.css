@@ -3,8 +3,11 @@
     --ticket-gold-light: #FFD700;
     --ticket-gold-dark: #B8860B;
     --bg-dark: #0d0d0d;
+    --bg-card: #1a1a1a;
+
     --text-primary: #ffffff;
     --text-secondary: #9ca3af;
+    --bg-warning: #1f1714;
 }
 
 * {
@@ -31,6 +34,8 @@ body {
     justify-content: center;
     gap: 2.5rem;
     padding: 2rem;
+    position: relative;
+    z-index: 1;
     animation: fadeIn 0.5s ease-out;
 }
 
@@ -44,7 +49,7 @@ body {
     align-items: center;
     gap: 0.5rem;
     padding: 0.75rem 1.25rem;
-    background: transparent;
+    background: var(--bg-card);
     border: 1px solid #2a2a2a;
     border-radius: 8px;
     color: var(--text-primary);
@@ -57,7 +62,7 @@ body {
 }
 
 .btn-back:hover {
-    background: #1a1a1a;
+    background: var(--bg-warning);
 }
 
 .btn-back .btn-icon {

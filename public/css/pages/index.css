@@ -10,6 +10,10 @@
     --text-secondary: #9ca3af;
     --text-muted: #6b7280;
     --text-black: #000000;
+
+    --text-warning: #ef4444;
+    --bg-warning: #1f1714;
+    --border-warning: #3d2a1f;
 }
 
 * {
@@ -30,11 +34,13 @@ body {
     position: relative;
 }
 
+/* ===================== CONTAINER ===================== */
+
 .container {
     text-align: center;
     z-index: 1;
     position: relative;
-    padding: 20rem;
+    padding: 2rem;
     animation: fadeIn 0.5s ease-out;
 }
 
@@ -49,12 +55,14 @@ body {
     }
 }
 
+/* ===================== LOGO + SHATTER ===================== */
+
 .logo-wrapper {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0;
-    margin-bottom: 8rem;
+    margin-bottom: 2rem;
     position: relative;
 }
 
@@ -62,13 +70,40 @@ body {
     font-size: 5rem;
     font-weight: 800;
     letter-spacing: -0.03em;
-    background: var(--text-primary);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    background-size: 200% auto;
-    animation: shine 5s linear infinite;
+    cursor: default;
+    display: inline-block;
 }
+
+.logo-letter {
+    display: inline-block;
+    color: var(--text-primary);
+    transition:
+        transform 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) calc(var(--i, 0) * 25ms),
+        opacity   0.55s ease                               calc(var(--i, 0) * 25ms);
+}
+
+.logo-text.shattering .logo-letter {
+    transform: translate(var(--dx, 0px), var(--dy, 0px)) rotate(var(--dr, 0deg)) scale(var(--ds, 0.4));
+    opacity: 0;
+    transition:
+        transform 0.42s cubic-bezier(0.55, 0.055, 0.675, 0.19) calc(var(--i, 0) * 18ms),
+        opacity   0.32s ease                                     calc(var(--i, 0) * 18ms);
+}
+
+/* ===================== LOGO EFFECTS ===================== */
+
+@keyframes ghostPulse {
+    0%   { opacity: 1; }
+    35%  { opacity: 0.06; }
+    65%  { opacity: 0.06; }
+    100% { opacity: 1; }
+}
+
+.logo-letter.idle-ghost {
+    animation: ghostPulse 1.4s ease-in-out forwards;
+}
+
+/* ===================== TEXT ===================== */
 
 .disclaimer {
     color: var(--text-secondary);
@@ -87,6 +122,8 @@ body {
     margin-left: auto;
     margin-right: auto;
 }
+
+/* ===================== BUTTONS ===================== */
 
 .buttons {
     display: flex;
@@ -115,6 +152,7 @@ body {
 .btn-primary {
     background: var(--gold-secondary);
     color: var(--text-black);
+    border: 1px solid var(--gold-dark, #9e760f);
 }
 
 .btn-primary:hover {
@@ -122,7 +160,7 @@ body {
 }
 
 .btn-secondary {
-    background: var(--bg-dark);
+    background: var(--bg-card);
     color: var(--text-primary);
     border: 1px solid #2a2a2a;
     padding: 0.9rem;
@@ -144,7 +182,7 @@ body {
 }
 
 .btn-secondary:hover {
-    background: var(--bg-card);
+    background: var(--bg-warning);
 }
 
 .btn-secondary:hover .btn-text {
@@ -175,14 +213,16 @@ body {
     text-decoration: underline;
 }
 
-.btn-divider-vertical{
+.btn-divider-vertical {
     width: 1px;
     height: 50px;
-    background: #2a2a2a;
+    background: var(--bg-warning);
     opacity: 0.75;
     align-self: center;
     margin: 0 .25rem;
 }
+
+/* ===================== STATUS ===================== */
 
 .status-container {
     display: flex;
@@ -254,13 +294,16 @@ body {
     background: #2a2a2a;
 }
 
+/* ===================== RESPONSIVE ===================== */
+
+
 @media (max-width: 768px) {
     .container {
         padding: 1rem;
     }
 
     .logo-wrapper {
-        margin-bottom: 5rem;
+        margin-bottom: 2rem;
     }
 
     .logo-text {
@@ -331,4 +374,9 @@ body {
         width: 100%;
         height: 1px;
     }
+
+    .aurora-1 { width: 140vw; height: 140vw; }
+    .aurora-2 { width: 120vw; height: 120vw; }
+    .aurora-3 { width: 100vw; height: 100vw; }
+    .aurora-4 { width: 90vw;  height: 90vw;  }
 }

@@ -11,6 +11,10 @@
     --text-secondary: #9ca3af;
     --text-muted: #6b7280;
     --text-black: #000000;
+
+    --text-warning: #ef4444;
+    --bg-warning: #1f1714;
+    --border-warning: #3d2a1f;
 }
 
 * {
@@ -33,6 +37,8 @@ body {
     width: 100%;
     max-width: 700px;
     padding: 2rem;
+    position: relative;
+    z-index: 1;
     animation: fadeIn 0.5s ease-out;
 }
 
@@ -135,6 +141,7 @@ body {
     background-color: var(--gold-secondary);
     color: var(--text-black);
     margin-top: 0.5rem;
+    border: 1px solid var(--gold-dark, #9e760f);
 }
 
 .btn-primary:hover {
@@ -175,7 +182,7 @@ body {
 }
 
 .btn-secondary {
-    background-color: transparent;
+    background-color: var(--bg-card);
     color: var(--text-primary);
     border: 1px solid var(--border-color);
     opacity: 1;
@@ -184,7 +191,7 @@ body {
 }
 
 .btn-secondary:hover {
-    background-color: var(--bg-card);
+    background-color: var(--bg-warning);
     border-color: #3a3a3a;
 }
 
