@@ -110,22 +110,21 @@
 
     <script src="/config.js"></script>
     <script>
-        const cfg = window.APP_CONFIG || {};
-
-        const bind = (id, url) => {
+        const bind = (id, key) => {
             const el = document.getElementById(id);
             if (!el) return;
             el.addEventListener('click', () => {
+                const url = (window.APP_CONFIG || {})[key];
                 if (!url) return;
                 window.open(url, '_blank', 'noopener,noreferrer');
             });
         };
 
-        bind('btn-discord', cfg.DISCORD);
-        bind('btn-youtube', cfg.YOUTUBE);
-        bind('btn-tiktok', cfg.TIKTOK);
-        bind('btn-instagram', cfg.INSTAGRAM);
-        bind('btn-facebook', cfg.FACEBOOK);
+        bind('btn-discord', 'DISCORD');
+        bind('btn-youtube', 'YOUTUBE');
+        bind('btn-tiktok', 'TIKTOK');
+        bind('btn-instagram', 'INSTAGRAM');
+        bind('btn-facebook', 'FACEBOOK');
     </script>
     <script src="/js/security.js"></script>
     <script src="/js/turbo-nav.js"></script>
